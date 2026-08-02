@@ -30,6 +30,7 @@ from exporter import (
 from idt_client import IdtClient, IdtConditions, IdtCredentials
 from models import ConservedRegion, PrimerPair, SequenceRecord
 from ncbi_client import NcbiClient, NcbiSearchParams
+from version import APP_VERSION
 
 
 APP_TITLE = "Gene Conservado — NCBI + Clustal Omega + IDT"
@@ -48,7 +49,7 @@ def restart_application(app_path: Path | None = None) -> None:
 class GenePipelineApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title(APP_TITLE)
+        self.title(f"{APP_TITLE} — v{APP_VERSION}")
         self.geometry("1260x820")
         self.minsize(1080, 700)
 
@@ -89,8 +90,13 @@ class GenePipelineApp(tk.Tk):
     def _create_ui(self) -> None:
         root = ttk.Frame(self, padding=8)
         root.pack(fill="both", expand=True)
+        header = ttk.Frame(root)
+        ttk.Label(
+            header,
+            text=f"Versão {APP_VERSION}",
+            font=("TkDefaultFont", 10, "bold"),
+        ).pack(side="left")
         self.notebook = ttk.Notebook(root)
-        self.notebook.pack(fill="both", expand=True)
 
         self.tab_ncbi = ttk.Frame(self.notebook, padding=10)
         self.tab_sequences = ttk.Frame(self.notebook, padding=10)
@@ -110,7 +116,6 @@ class GenePipelineApp(tk.Tk):
         self._build_idt_tab()
 
         bottom = ttk.Frame(root)
-        bottom.pack(fill="x", pady=(8, 0))
         self.status_var = tk.StringVar(value="Pronto.")
         ttk.Label(bottom, textvariable=self.status_var).pack(side="left")
         ttk.Button(bottom, text="Exportar projeto", command=self.export_project).pack(side="right")
@@ -121,10 +126,18 @@ class GenePipelineApp(tk.Tk):
         ).pack(side="right", padx=(0, 6))
 
         log_frame = ttk.LabelFrame(root, text="Log", padding=4)
-        log_frame.pack(fill="both", expand=False, pady=(8, 0))
         self.log_text = ScrolledText(log_frame, height=8, wrap="word")
         self.log_text.pack(fill="both", expand=True)
-        self.log("Aplicativo iniciado. Credenciais não são enviadas ao ChatGPT.")
+
+        # Reserve o rodapé antes da área expansível para que os controles não
+        # sejam empurrados para fora da janela em telas menores.
+        log_frame.pack(side="bottom", fill="x", expand=False, pady=(8, 0))
+        bottom.pack(side="bottom", fill="x", pady=(8, 0))
+        header.pack(side="top", fill="x", pady=(0, 6))
+        self.notebook.pack(side="top", fill="both", expand=True)
+        self.log(
+            f"Aplicativo v{APP_VERSION} iniciado. Credenciais não são enviadas ao ChatGPT."
+        )
 
     @staticmethod
     def _entry(parent, row, label, variable, width=34, show=None, column=0):

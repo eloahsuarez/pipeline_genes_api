@@ -1,5 +1,7 @@
 # Gene Conservado — NCBI + Clustal Omega + IDT
 
+Versão atual: **1.1.0**
+
 Aplicativo de desktop compatível com **macOS e Windows** que automatiza este fluxo:
 
 1. pesquisa registros nucleotídicos no NCBI/GenBank;
@@ -46,6 +48,9 @@ Também estão disponíveis os scripts separados:
 Quando os arquivos do programa forem atualizados diretamente nesta pasta, clique em
 **Atualizar ferramenta**, na barra inferior. O aplicativo encerra a instância atual e
 abre novamente com o mesmo Python, carregando o código novo.
+
+O código da versão aparece no canto superior esquerdo da janela e também no título.
+Cada nova atualização deve alterar `APP_VERSION` no arquivo `version.py`.
 
 O botão não baixa arquivos da internet e não altera a `.venv`: ele apenas reinicia o
 programa para aplicar o que já foi substituído na pasta do projeto. Aguarde qualquer

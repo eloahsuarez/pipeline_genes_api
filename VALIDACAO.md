@@ -17,7 +17,9 @@ Executado em 2 de agosto de 2026:
 - exportação dos metadados de éxons e junções em CSV/XLSX: aprovada;
 - reinício local usa o mesmo interpretador e reabre o código atualizado: aprovado;
 - reinício de uma futura versão empacotada: aprovado;
-- suíte automatizada: **25 testes aprovados**;
+- versão semântica centralizada e exibida na interface: aprovada;
+- rodapé e botão de atualização visíveis em janela de 1260 × 820: aprovado;
+- suíte automatizada: **26 testes aprovados**;
 - validação sintática dos scripts do macOS com `bash -n`: aprovada;
 - permissões de execução dos arquivos `.command`: configuradas no ZIP.
 
