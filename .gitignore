@@ -1,0 +1,32 @@
+# Ambientes e caches Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Empacotamento
+build/
+dist/
+*.egg-info/
+
+# Configurações e credenciais locais
+.env
+.env.*
+!.env.example
+config.json
+configuracao.json
+*.local.json
+
+# Arquivos do sistema e editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Exportações geradas pelo aplicativo
+gene_pipeline_*/

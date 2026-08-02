@@ -1,0 +1,20 @@
+GENE CONSERVADO — INSTALAÇÃO NO macOS
+
+Forma mais simples:
+1. Extraia completamente o arquivo ZIP.
+2. Abra a pasta extraída.
+3. Clique duas vezes em INICIAR_NO_MAC.command.
+4. Na primeira execução, o programa cria o ambiente e instala as dependências.
+
+Requisito:
+- Python 3.11 ou superior, preferencialmente instalado pelo instalador oficial do python.org.
+- Essa distribuição normalmente inclui o Tkinter usado pela interface gráfica.
+
+Caso o macOS bloqueie o arquivo:
+- Clique com o botão direito em INICIAR_NO_MAC.command e escolha Abrir.
+- Ou abra o Terminal nessa pasta e execute:
+
+  chmod +x *.command
+  ./INICIAR_NO_MAC.command
+
+O programa não salva a senha nem o Client Secret da IDT no arquivo de configuração.
