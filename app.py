@@ -28,12 +28,23 @@ from exporter import (
     write_text,
 )
 from idt_client import IdtClient, IdtConditions, IdtCredentials
+from local_storage import LocalStateStore
 from models import ConservedRegion, PrimerPair, SequenceRecord
 from ncbi_client import NcbiClient, NcbiSearchParams
 from version import APP_VERSION
 
 
 APP_TITLE = "Gene Conservado — NCBI + Clustal Omega + IDT"
+CREDENTIAL_VARIABLES = {
+    "ncbi_email",
+    "ncbi_api_key",
+    "ebi_email",
+    "idt_client_id",
+    "idt_client_secret",
+    "idt_username",
+    "idt_password",
+}
+SENSITIVE_CONFIG_VARIABLES = {"ncbi_api_key", "idt_client_secret", "idt_password"}
 
 
 def restart_application(app_path: Path | None = None) -> None:
@@ -63,10 +74,14 @@ class GenePipelineApp(tk.Tk):
         self.pairs: list[PrimerPair] = []
         self.worker_queue: queue.Queue[tuple[str, object]] = queue.Queue()
         self.busy = False
+        self.local_state_store = LocalStateStore()
+        self.local_persistence_enabled = True
 
         self.vars: dict[str, tk.Variable] = {}
         self._create_menu()
         self._create_ui()
+        self._load_local_state()
+        self.protocol("WM_DELETE_WINDOW", self.close_app)
         self.after(150, self._poll_worker_queue)
 
     def _var(self, name: str, value, kind: str = "str"):
@@ -83,8 +98,19 @@ class GenePipelineApp(tk.Tk):
         file_menu.add_separator()
         file_menu.add_command(label="Exportar projeto…", command=self.export_project)
         file_menu.add_separator()
-        file_menu.add_command(label="Sair", command=self.destroy)
+        file_menu.add_command(label="Sair", command=self.close_app)
         menu.add_cascade(label="Arquivo", menu=file_menu)
+
+        local_menu = tk.Menu(menu, tearoff=False)
+        local_menu.add_command(
+            label="Salvar configurações e credenciais agora",
+            command=lambda: self.save_local_state(show_confirmation=True),
+        )
+        local_menu.add_command(
+            label="Apagar dados salvos deste computador…",
+            command=self.delete_local_state,
+        )
+        menu.add_cascade(label="Dados locais", menu=local_menu)
         self.config(menu=menu)
 
     def _create_ui(self) -> None:
@@ -395,6 +421,8 @@ class GenePipelineApp(tk.Tk):
                 "Aguarde a operação atual terminar antes de atualizar a ferramenta.",
             )
             return
+        if self.local_persistence_enabled and not self.save_local_state():
+            return
         self.status_var.set("Atualizando e reiniciando…")
         self.log("Reiniciando para carregar as atualizações da pasta do projeto.")
         self.update_idletasks()
@@ -403,6 +431,85 @@ class GenePipelineApp(tk.Tk):
     def _restart_process(self) -> None:
         self.destroy()
         restart_application()
+
+    def _local_settings_data(self) -> dict:
+        return {
+            name: variable.get()
+            for name, variable in self.vars.items()
+            if name not in CREDENTIAL_VARIABLES
+        }
+
+    def _credential_data(self) -> dict[str, str]:
+        return {
+            name: str(self.vars[name].get())
+            for name in CREDENTIAL_VARIABLES
+            if name in self.vars
+        }
+
+    def _load_local_state(self) -> None:
+        try:
+            settings, credentials = self.local_state_store.load()
+        except Exception as exc:
+            self.log(f"Não foi possível carregar os dados locais: {exc}")
+            messagebox.showwarning("Dados locais", str(exc))
+            return
+
+        for name, value in {**settings, **credentials}.items():
+            if name in self.vars:
+                self.vars[name].set(value)
+        self._refresh_junction_references()
+        if settings or credentials:
+            self.log("Configurações e credenciais locais carregadas com segurança.")
+
+    def save_local_state(self, show_confirmation: bool = False) -> bool:
+        try:
+            self.local_state_store.save(
+                self._local_settings_data(),
+                self._credential_data(),
+            )
+        except Exception as exc:
+            self.log(f"Não foi possível salvar os dados locais: {exc}")
+            messagebox.showerror("Dados locais", str(exc))
+            return False
+
+        self.local_persistence_enabled = True
+        self.log("Configurações salvas localmente e credenciais guardadas no cofre do sistema.")
+        if show_confirmation:
+            messagebox.showinfo(
+                "Dados locais",
+                "Configurações e credenciais foram salvas somente neste computador.",
+            )
+        return True
+
+    def delete_local_state(self) -> None:
+        confirmed = messagebox.askyesno(
+            "Apagar dados locais",
+            "Apagar configurações e credenciais salvas neste computador?",
+        )
+        if not confirmed:
+            return
+        try:
+            self.local_state_store.delete()
+        except Exception as exc:
+            self.log(f"Não foi possível apagar os dados locais: {exc}")
+            messagebox.showerror("Dados locais", str(exc))
+            return
+        for name in CREDENTIAL_VARIABLES:
+            if name in self.vars:
+                self.vars[name].set("")
+        self.local_persistence_enabled = False
+        self.log("Configurações e credenciais locais apagadas.")
+        messagebox.showinfo("Dados locais", "Os dados salvos neste computador foram apagados.")
+
+    def close_app(self) -> None:
+        if self.local_persistence_enabled and not self.save_local_state():
+            close_without_saving = messagebox.askyesno(
+                "Fechar sem salvar",
+                "Não foi possível salvar os dados locais. Deseja fechar mesmo assim?",
+            )
+            if not close_without_saving:
+                return
+        self.destroy()
 
     def _invalidate_alignment_results(self, announce: bool = False) -> None:
         had_results = bool(self.alignment or self.regions or self.pairs)
@@ -744,8 +851,11 @@ class GenePipelineApp(tk.Tk):
             ))
 
     def config_data(self) -> dict:
-        excluded = {"idt_password", "idt_client_secret"}
-        return {name: variable.get() for name, variable in self.vars.items() if name not in excluded}
+        return {
+            name: variable.get()
+            for name, variable in self.vars.items()
+            if name not in SENSITIVE_CONFIG_VARIABLES
+        }
 
     def save_config(self) -> None:
         path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON", "*.json")])

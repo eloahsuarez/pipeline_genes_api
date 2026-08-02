@@ -19,7 +19,12 @@ Executado em 2 de agosto de 2026:
 - reinício de uma futura versão empacotada: aprovado;
 - versão semântica centralizada e exibida na interface: aprovada;
 - rodapé e botão de atualização visíveis em janela de 1260 × 820: aprovado;
-- suíte automatizada: **26 testes aprovados**;
+- separação entre configurações comuns e credenciais: aprovada;
+- credenciais ausentes do JSON local e dos arquivos exportados: aprovada;
+- permissões privadas do arquivo local no macOS/Linux: aprovadas;
+- cofre nativo detectado nesta máquina: `keyring.backends.macOS.Keyring`;
+- exclusão dos dados locais e da entrada no cofre: aprovada;
+- suíte automatizada: **31 testes aprovados**;
 - validação sintática dos scripts do macOS com `bash -n`: aprovada;
 - permissões de execução dos arquivos `.command`: configuradas no ZIP.
 

@@ -28,6 +28,20 @@ Estas regras devem ser preservadas em todas as alterações futuras deste reposi
 - Não reiniciar enquanto uma consulta ou análise estiver em andamento.
 - Preservar `.venv`, configurações, credenciais e arquivos exportados.
 
+## Configurações e credenciais locais
+
+- Carregar configurações e credenciais automaticamente ao abrir o aplicativo.
+- Salvar automaticamente ao fechar normalmente ou ao usar **Atualizar ferramenta**.
+- Guardar configurações não sensíveis no diretório de dados do usuário, fora do
+  repositório, com permissão privada no macOS/Linux.
+- Guardar e-mail, usuário, API keys, Client ID, Client Secret e senha exclusivamente no
+  cofre seguro do sistema por meio de `keyring` (Chaves do macOS ou Gerenciador de
+  Credenciais do Windows).
+- Nunca gravar API keys, Client Secret ou senhas nos JSONs exportados, logs, testes,
+  commits ou GitHub.
+- Manter no menu **Dados locais** as ações para salvar imediatamente e apagar os dados
+  armazenados neste computador.
+
 ## Validação e publicação
 
 - Antes de concluir uma alteração, executar `python -m pytest -q` e verificar a

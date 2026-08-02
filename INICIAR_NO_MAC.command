@@ -37,6 +37,9 @@ if [ ! -x ".venv/bin/python" ]; then
   python3 -m venv .venv
   .venv/bin/python -m pip install --upgrade pip
   .venv/bin/python -m pip install -r requirements.txt
+elif ! .venv/bin/python -c 'import keyring' >/dev/null 2>&1; then
+  echo "Instalando os componentes da atualização..."
+  .venv/bin/python -m pip install -r requirements.txt
 fi
 
 echo "Abrindo o Gene Conservado..."

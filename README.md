@@ -1,6 +1,6 @@
 # Gene Conservado — NCBI + Clustal Omega + IDT
 
-Versão atual: **1.1.0**
+Versão atual: **1.2.0**
 
 Aplicativo de desktop compatível com **macOS e Windows** que automatiza este fluxo:
 
@@ -57,6 +57,19 @@ programa para aplicar o que já foi substituído na pasta do projeto. Aguarde qu
 consulta ou análise em andamento terminar. Resultados que ainda estiverem apenas na
 memória devem ser exportados antes do reinício.
 
+## Configurações e credenciais locais
+
+O aplicativo carrega os dados locais ao abrir e salva automaticamente ao fechar ou
+reiniciar. Também é possível usar o menu **Dados locais** para salvar imediatamente ou
+apagar tudo que ficou armazenado neste computador.
+
+- configurações comuns ficam fora da pasta do projeto, no diretório privado de dados do
+  usuário;
+- credenciais ficam no cofre seguro do sistema: **Chaves do macOS** ou **Gerenciador de
+  Credenciais do Windows**;
+- API key do NCBI, Client Secret e senha da IDT não são incluídos em configurações
+  exportadas, logs, Git ou GitHub.
+
 ## Instalação no Windows 11
 
 1. Extraia a pasta.
@@ -81,7 +94,9 @@ Requer Python 3.11 ou superior instalado com o comando `py` disponível.
 
 Na conta IDT, abra **My Account → API access** e gere Client ID e Client Secret. O programa solicita um token OAuth quando a análise é iniciada.
 
-O arquivo de configuração **não grava a senha nem o Client Secret**. Não envie credenciais pelo ChatGPT.
+Os arquivos de configuração exportados **não gravam API keys, senha nem Client Secret**.
+O salvamento automático local usa o cofre seguro do sistema. Não envie credenciais pelo
+ChatGPT.
 
 ## O que significa “sequência aplicável ao gene”
 
