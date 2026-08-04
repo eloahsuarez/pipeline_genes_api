@@ -48,6 +48,9 @@ class ConservedRegion:
     sequence: str
     mean_identity: float
     mean_coverage: float
+    reference_accession: str = ""
+    reference_start: int = 0
+    reference_end: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

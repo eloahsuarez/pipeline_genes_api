@@ -20,5 +20,21 @@
   "require_exon_junction": false,
   "junction_reference": "",
   "junction_min_5p": 7,
-  "junction_min_3p": 4
+  "junction_min_3p": 4,
+  "ncbi_specificity_database": "refseq_mrna",
+  "ncbi_specificity_top_n": 1,
+  "ncbi_specificity_max_hits": 50000,
+  "ncbi_specificity_max_amplicon": 4000,
+  "ncbi_specificity_max_estimated_mismatches": 6,
+  "ncbi_specificity_timeout_minutes": 30,
+  "specificity_reference": "",
+  "specificity_blastn": "",
+  "specificity_makeblastdb": "",
+  "specificity_mfeprimer": "",
+  "specificity_top_n": 10,
+  "specificity_cpu": 4,
+  "specificity_max_hits": 100,
+  "specificity_identity_pct": 80.0,
+  "specificity_coverage_pct": 80.0,
+  "specificity_tm_cutoff": 30.0
 }

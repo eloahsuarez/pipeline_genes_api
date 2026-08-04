@@ -1,0 +1,1369 @@
+ï»¿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="jig" content="ncbiautocomplete"/>
+<meta name="referrer" content="origin-when-cross-origin" />
+<meta name="ncbi_app" content="primerblast" />
+<meta name="ncbi_pdid" content="blastsearch" />
+<meta name="ncbi_sessionid" content="0C429678A7228391_0000SID" />
+<meta name="ncbi_phid" content="0C429678A72283910000000000000001" />
+<script type="text/javascript">    var ncbi_startTime = new Date(); </script>
+<title>Primer designing tool</title>
+<!-- style -->
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="stylesheet" type="text/css" href="css/uswds.min.css" media="screen" />
+<!--<link rel="stylesheet"  type="text/css" href="https://www.ncbi.nlm.nih.gov/style-guide/static/nwds/css/nwds.css"/>-->
+<link rel="stylesheet"  type="text/css" href="css/nwds.css"/>
+<link rel="stylesheet" href="css/header.css"/>
+<link rel="stylesheet" href="css/footer.css"/>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous"> <!-- Font Awesome icons -->
+<link rel="stylesheet" type="text/css" href="css/footer.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="css/main.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="css/common.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="css/blastn.css" media="screen" />
+<!--[if IE]>
+<link rel="stylesheet" type="text/css" href="css/blastnIE.css" media="screen" />
+<![endif]-->
+<!--[if IE 8]>
+<link rel="stylesheet" type="text/css" href="css/blastnIE8.css" media="screen" />
+<![endif]-->
+<!--<link rel="stylesheet" type="text/css" href="css/print.css" media="print" />-->
+<!--[if lte IE 6]>
+<link rel="stylesheet" type="text/css" href="css/ie6_or_less.css" />
+<![endif]-->
+
+<!-- behavior -->
+<!-- Not currently using ie7 JS script, because it causes a JS error -->
+<!-- [if lt IE 7]> 
+<script src="https://nihms.nih.gov/db/ie7-standard-p.js" type="text/javascript"></script>
+<![endif]-->
+
+<!-- js files for title filling -->
+<script type="text/javascript" src="/core/jig/1.15.2/js/jig.min.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="js/toggle.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/remote_data_provider.js"></script>
+<script type="text/javascript" src="js/primerInit.js"></script>
+</head>
+<body id="type-a" class="">
+
+<div id="wrap">
+    
+    <script>var useOfficialGovtHeader = true;</script>
+<section class="usa-banner">
+  <div class="usa-accordion">
+    <header class="usa-banner-header">
+      <div class="usa-grid usa-banner-inner">
+        <img src="https://www.ncbi.nlm.nih.gov/coreutils/uswds/img/favicons/favicon-57.png" alt="U.S. flag">
+        <p>An official website of the United States government</p>
+        <button class="usa-accordion-button usa-banner-button" aria-expanded="false" aria-controls="gov-banner-top">
+          <span class="usa-banner-button-text">Here's how you know</span>
+        </button>
+      </div>
+    </header>
+    <div class="usa-banner-content usa-grid usa-accordion-content" id="gov-banner-top" aria-hidden="true">
+      <div class="usa-banner-guidance-gov usa-width-one-half">
+        <img class="usa-banner-icon usa-media_block-img" src="https://www.ncbi.nlm.nih.gov/coreutils/uswds/img/icon-dot-gov.svg" alt="Dot gov">
+        <div class="usa-media_block-body">
+          <p>
+            <strong>The .gov means itâs official.</strong>
+            <br>
+            Federal government websites often end in .gov or .mil. Before
+            sharing sensitive information, make sure youâre on a federal
+            government site.
+          </p>
+        </div>
+      </div>
+      <div class="usa-banner-guidance-ssl usa-width-one-half">
+        <img class="usa-banner-icon usa-media_block-img" src="https://www.ncbi.nlm.nih.gov/coreutils/uswds/img/icon-https.svg" alt="Https">
+        <div class="usa-media_block-body">
+          <p>
+            <strong>The site is secure.</strong>
+            <br>
+            The <strong>https://</strong> ensures that you are connecting to the
+            official website and that any information you provide is encrypted
+            and transmitted securely.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<header class="ncbi-header" role="banner" data-section="Header">
+<a class="usa-skipnav" href="#mainCont">Skip to main page content</a>
+<div class="usa-grid">
+    <div class="usa-width-one-whole">
+        <div class="ncbi-header__logo">
+                <a href="https://www.ncbi.nlm.nih.gov/" class="logo" aria-label="NCBI Logo" data-ga-action="click_image" data-ga-label="NIH NLM Logo">
+                  <img src="https://www.ncbi.nlm.nih.gov/coreutils/nwds/img/logos/AgencyLogo.svg" alt="NIH NLM Logo">
+                </a>
+            </div>
+
+        <div class="ncbi-header__account">
+            <a id="account_login" href="https://www.ncbi.nlm.nih.gov/account/?back_url=https%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Ftools%2Fprimer%2Dblast%2F%3FPAGE%5FTYPE%3DSearch" class="usa-button header-button">Log in</a>
+            <button id="account_info" class="header-button" aria-controls="account_popup">
+                <span class="fa fa-user" aria-hidden="true"></span>
+                <span class="username desktop-only" aria-hidden="true" id="uname_short"></span>
+                <span class="sr-only">Show account info</span>
+            </button>
+        </div>
+
+        <div class="ncbi-popup-anchor">
+            <div class="ncbi-popup account-popup" id="account_popup" aria-hidden="true" role="dialog" aria-labelledby="account-popup-header">
+                <div class="ncbi-popup-head">
+                    <button class="ncbi-close-button"><span class="fa fa-window-close"></span><span class="usa-sr-only">Close</span></button>
+                    <h4>Account</h4>
+                </div>
+                <div class="account-user-info">
+                    Logged in as:<br>
+                    <b><span class="username" id="uname_long">username</span></b>
+                </div>
+                <div class="account-links">
+                    <ul class="usa-unstyled-list">
+                        <li><a id="account_myncbi" href="https://www.ncbi.nlm.nih.gov/myncbi/">Dashboard</a> <span class="ncbi-text-small-light">(My NCBI)</span></li>
+                        <li><a id="account_pubs" href="https://www.ncbi.nlm.nih.gov/myncbi/collections/bibliography/">Publications</a> <span class="ncbi-text-small-light">(My Bibliography)</span></li>
+                        <li><a id="account_settings" href="https://www.ncbi.nlm.nih.gov/account/settings/">Account settings</a></li>
+                        <li><a id="account_logout" href="https://www.ncbi.nlm.nih.gov/account/signout/?back_url=https%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Ftools%2Fprimer%2Dblast%2F%3FPAGE%5FTYPE%3DSearch">Log out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</header>
+<div role="navigation" aria-label="access keys">
+<a id="nws_header_accesskey_0" href="https://www.ncbi.nlm.nih.gov/guide/browsers/#ncbi_accesskeys" class="usa-sr-only" accesskey="0" tabindex="-1">Access keys</a>
+<a id="nws_header_accesskey_1" href="https://www.ncbi.nlm.nih.gov" class="usa-sr-only" accesskey="1" tabindex="-1">NCBI Homepage</a>
+<a id="nws_header_accesskey_2" href="/myncbi/" class="set-base-url usa-sr-only" accesskey="2" tabindex="-1">MyNCBI Homepage</a>
+<a id="nws_header_accesskey_3" href="#maincontent" class="usa-sr-only" accesskey="3" tabindex="-1">Main Content</a>
+<a id="nws_header_accesskey_4" href="#" class="usa-sr-only" accesskey="4" tabindex="-1">Main Navigation</a>
+</div>
+
+<nav class="ncbi-topnav" id="navcontent">
+    <div class="usa-grid">
+        <a class="lf" href="index.cgi">Primer-BLAST</a>
+        <span id="brc">A tool for finding specific primers</span>
+        <span class="rf"></span>
+    </div>
+</nav>
+
+
+        
+    <div id="content-wrap">                     
+        <div class="pageTitle">                            
+            Finding primers specific to your PCR template (using Primer3 and BLAST).
+        </div>    
+              
+        <div id="content">                
+                
+            <!-- Do errors this way -->        
+            <ul class="msg "><li class=""><p class=""></p></li></ul>            
+              <div class="bc-tabs">
+    <ul>
+      <li class="tab-current"><input type="button" class="usa-button progLinks" id="OneTargTab" proglink="index.cgi?" title="Design primers for one template" value="Primers for target on one template"/></li>
+<li><input type="button" class="usa-button progLinks" id="GroupTagrTab" proglink="index.cgi?GROUP_TARGET=on" title="Design primers for multiple similar templates" value="Primers common for a group of sequences"/></li>                        
+        
+      </ul>
+  </div>
+            <form name="searchForm" action="./primertool.cgi" enctype="multipart/form-data"  method="post" class="f-wrap-1 " id="searchForm">
+            <div class="pagelinks" id="pgl">                                    
+            <span class="lnk">
+            <a href="retrieve.html" id="retrieve">Retrieve recent results</a>
+            <a href="primerinfo.html" target="helpWin" class="pagelinks">Publication</a>
+            <a href="search_tips.html" id="tips" target="helpWin">Tips for finding specific primers</a>      
+            </span>
+            <button class="usa-button-secondary" id="resetlink" resetform="searchForm">Reset page</button>
+            <button class="usa-button-secondary" name="getURL" id="getURL">Save search parameters</button>
+            </div>
+            <div id="query" class="section">
+    
+            <fieldset>
+                <legend>PCR Template</legend>
+   
+                
+                    <div class="formblock " id="qseq">                    
+                        <label for="seq">Enter accession, gi, or FASTA sequence</label>                        
+                        <span class="help">(A refseq record is preferred)</span>
+                            <a class="helplink hiding" title="help" href="#" id="queryHelp"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>                            
+                            <button class="usa-button-secondary clearlink" fieldToClear="seq" id="clearseq">Clear</button>
+                        <div toggle="queryHelp" class="helpbox hidden" id="hq">
+                          Enter the PCR template here (multiple templates are currently not supported).  It is highly recommended to use refseq accession or GI (rather than the raw DNA sequence) whenever possible as this allows Primer-BLAST to better identify the template and thus perform better primer specificity checking.
+<br>A template is not required if both forward and reverse primers are entered below.
+<br>The template length is limited to 50,000 bps.  If your template is longer than that, you need to use primer range to limit the length (i.e., set forward primer "From" and reverse primer "To" fields but leave forward primer "To" and reverse primer "From" fields empty). 
+                        </div>                                                                              
+                        <textarea id="seq" class="reset" rows="5" cols="80" name="INPUT_SEQUENCE" ></textarea>                        
+                        <br />                        
+                        <label for="upl" class="m" >Or, upload FASTA file</label>
+                        <div class="input  ">
+                            <input type="file" id="upl" name="SEQFILE" />                                 
+                        </div>                    
+                        
+                    </div>     
+              
+                    <div id="qrange" class="formdetail">                    
+                        <div id="hrg"><label>Range</label>                        
+                          <span id="ar">
+                            <a class="helplink hiding" title="help" id="primerRgHl" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>                            
+                            <button class="usa-button-secondary clearlink" fieldToClear="PRIMER5_START,PRIMER5_END,PRIMER3_START,PRIMER3_END"  id="clearRange">Clear</button>
+                        </span>       
+                        <hr class="rgLine"/>
+                        </div>                        
+                        <div id="frrg">                                                        
+                            <span id="fRgm" class="rgm">From</span>
+                            <span id="tRgm" class="prRangeDt">To</span>
+                        </div>
+                        <div id="prrg">                        
+                            <span class="rgl"><label for="PRIMER5_START">Forward primer</label></span>
+                            <span class="rgm"><input type="text" name="PRIMER5_START" value="" size="5" id="PRIMER5_START" class="reset" /></span>
+                            <span class=" prRangeDt"><input type="text" name="PRIMER5_END" value="" size="5" id="PRIMER5_END" class="reset" /></span>
+                        </div> 
+                        <div id="rv">                    
+                            <span class="rgl"><label for="PRIMER3_START">Reverse primer</label></span>
+                            <span class="rgm"><input type="text" size="5" class="reset" name="PRIMER3_START" value="" id="PRIMER3_START" /></span>
+                            <span class=" prRangeDt"><input type="text" size="5" class="reset" name="PRIMER3_END" id="PRIMER3_END" value="" /></span>                            
+                        </div>    
+                                     
+                        
+                        <p toggle="primerRgHl" class="helpbox hidden" id="helprange">
+                        Enter the position ranges if you want the primers to be located on the specific sites.  The positions refer to the base numbers on the plus strand of your template (i.e., the "From" position should always be smaller than the "To" position for a given primer).  Partial ranges are allowed.  For example, if you want the PCR product to be located between position 100 and position 1000 on the template, you can set forward primer "From" to 100 and reverse primer "To" to 1000 (but leave the forward primer "To" and reverse primer "From" empty).
+
+ <br>Note that the position range of forward primer may not overlap with that of reverse primer. 
+                        </p>
+                        &nbsp; <!-- Hack for Mozilla, this time... -->
+                    
+                    </div>
+                    
+            </fieldset>
+
+            <fieldset class="  section">
+                <legend>Primer Parameters</legend>
+         
+                <label for="PRIMER_LEFT_INPUT" class="m ">Use my own forward primer (5'->3' on plus strand)</label>
+                <div class="input ">
+                    <input class="reset" size="36" name="PRIMER_LEFT_INPUT" value="" type="text" id="PRIMER_LEFT_INPUT" />
+                    <a class="helplink" title="help" href="#" id="primerLft"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="primerLft" class="helpbox hidden">
+                        Optionally enter your pre-designed forward primer. Always use the actual primer sequence (i.e., 5'->3' on plus strand of the template).  Please enter the primer sequence only (No any other characters are allowed).                    
+                    </p>
+                    <button class="usa-button-secondary clearlink" fieldToClear="PRIMER_LEFT_INPUT" id="clearprimer_left">Clear</button>
+                </div>
+                          
+                <label for="PRIMER_RIGHT_INPUT" class="m ">Use my own reverse primer (5'->3' on minus strand)</label>
+                <div class="input ">
+                    <input size="36" name="PRIMER_RIGHT_INPUT" value="" type="text" ID="PRIMER_RIGHT_INPUT" /><a class="helplink" title="help" href="#" id="primerRight"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="primerRight" class="helpbox hidden">
+                        Optionally enter your pre-designed reverse primer.  Always use the actual primer sequence (i.e., 5'->3' on minus strand of the template).  Please enter the primer sequence only (No any other characters are allowed).
+                    </p>                    
+                    <button class="usa-button-secondary clearlink" fieldToClear="PRIMER_RIGHT_INPUT" id="clearprimer_right">Clear</button>
+                </div>
+         
+                <label for="PRIMER_PRODUCT_MIN" class="m  r">PCR product size</label>
+                <div class="input ">               
+                    <div class=" infl">                
+                        <label for="PRIMER_PRODUCT_MIN">Min</label>        
+                        <label for="PRIMER_PRODUCT_MAX" class="lbLm">Max</label>
+                    </div>                     
+                    <input type="text" name="PRIMER_PRODUCT_MIN" size="5" value = "" id="PRIMER_PRODUCT_MIN" defVal="70" class="checkDef"/>                
+                    <input type="text" name="PRIMER_PRODUCT_MAX" size="5" value = "" id="PRIMER_PRODUCT_MAX" defVal="1000" class="checkDef rs"/>
+                </div>
+     
+                <label for="PRIMER_NUM_RETURN" class="m "># of primers to return</label> 
+                <div class="input ">               
+                    <input size="4" name="PRIMER_NUM_RETURN" value="" type="text" ID="PRIMER_NUM_RETURN" defVal="10" class="checkDef" />
+                </div>
+                <label for="PRIMER_MIN_TM" class="m  r">Primer melting temperatures (T<sub>m</sub>)</label>
+                <div class="input ">               
+                    <div class=" infl">
+                        <label for="PRIMER_MIN_TM">Min</label>
+                        <label for="PRIMER_OPT_TM" class="lbLm">Opt</label>
+                        <label for="PRIMER_MAX_TM" class="lbLm">Max</label>
+                        <label for="PRIMER_MAX_DIFF_TM" class="lbLm">Max T<sub>m</sub> difference</label>
+                    </div>             
+                    <input size="4" name="PRIMER_MIN_TM" value="" type="text" id="PRIMER_MIN_TM" defVal="57.0" class="checkDef" />
+                    <input size="4" name="PRIMER_OPT_TM" value="" type="text" id="PRIMER_OPT_TM" defVal="60.0" class="rs checkDef" />
+                    <input size="4" name="PRIMER_MAX_TM" value="" type="text" id="PRIMER_MAX_TM" defVal="63.0" class="rs checkDef" /> 
+                    <input size="4" name="PRIMER_MAX_DIFF_TM" value="" type="text" id="PRIMER_MAX_DIFF_TM" defVal="3"  class="rs checkDef" />            
+                          <a class="helplink" title="help" href="#" id="PRIMER_MAX_DIFF_TMHp"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>                           
+                    <p toggle="PRIMER_MAX_DIFF_TMHp" class="helpbox hidden">
+                        
+                    The Tm calculation is controlled by Table of thermodynamic parameters and Salt correction formula (under advanced parameters).  The default Table of thermodynamic parameters is "SantaLucia 1998" and the default Salt correction formula is "SantaLucia 1998" as recommended by primer3 program.
+                    </p>  
+            
+	        </div>
+		<label for="PREFER_3END" class="m">Primer Location Preference</label>	  
+                <div class="input">         
+		  <input type="checkbox"  name="PREFER_3END" id="PREFER_3END"  class="checkDef" defval="unchecked" />
+		  <label class="right inlinelabel" for="PREFER_3END">Prefer primers at 3' side of the template</label>            
+                    <a class="helplink" title="help" href="#" id="PREFER_3END_HELP"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="PREFER_3END_HELP" class="helpbox hidden">
+                        With this option on, the program will try to return primers at the 3' side of template first. Note that obtaining such primers is not always possible due to other constraints (for example, there might be no unique region at the 3' side to generate target-specific primers).  
+                    </p>
+		</div>	  
+           
+            </fieldset>
+            
+            <fieldset class="section">                
+                <legend>Exon/intron selection</legend>                
+                <div class="input" id="eih">
+                <label class="right inlinelabel">A refseq mRNA sequence as PCR template input is required for options in the section</label>
+                <a class="helplink hiding" title="help" href="#" id="Exon_intronHelp"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>                                        
+                <div toggle="Exon_intronHelp" class="helpbox hidden">
+                A refseq mRNA sequence (for example an entrez sequence record that has accession starting with NM_) allows the program to properly identify the corrsponding genomic DNA and thus find correct exon/intron boundaries. 
+                </div>
+                </div>    
+                <label class="m" for="PRIMER_ON_SPLICE_SITE">Exon junction span</label>
+                <div class="input "> 
+                  <span class="sel poss">
+                    <select name="PRIMER_ON_SPLICE_SITE" id="PRIMER_ON_SPLICE_SITE" class="reset  checkDef" defVal="0" >
+                    <option selected="selected" value="0"  >No preference</option>
+                    <option value="1"  >Primer must span an exon-exon junction</option>
+                    <option value="2"  >Primer may not span an exon-exon junction</option>
+                    </select> 
+                    </span>
+                    <a class="helplink" title="help" href="#" id="primer_splice_siteHl"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="primer_splice_siteHl" class="helpbox hidden">
+                    This controls whether the primer should span an exon junction on your mRNA template. The option "Primer must span an exon-exon junction" will direct the program to return at least one primer (within a given primer pair) that spans an exon-exon junction.  This is useful for limiting the amplification only to mRNA.  You can also exclude such primers if you want to amplify mRNA as well as the corresponding genomic DNA.
+                    </p>
+                </div>
+                <label class="m" for="SPLICE_SITE_OVERLAP_5END">Exon junction match</label> 
+                <div class="input "> 
+                  <div class=" infl">                
+                    <label for="SPLICE_SITE_OVERLAP_5END">Min 5' match</label>
+                    <label for="SPLICE_SITE_OVERLAP_3END" id="lbEbo" class="lbLm">Min 3' match</label>
+                   <label for="SPLICE_SITE_OVERLAP_3END_MAX" id="lbEbo" class="lbLm">Max 3' match</label>
+                  </div>   
+                  <input type="text" name="SPLICE_SITE_OVERLAP_5END" size="5" value = "" id="SPLICE_SITE_OVERLAP_5END" defVal="7" class="checkDef reset"/> 
+                    <input type="text" name="SPLICE_SITE_OVERLAP_3END" size="5" value = "" id="SPLICE_SITE_OVERLAP_3END" defVal="4" class="checkDef reset rs"/>
+                   <input type="text" name="SPLICE_SITE_OVERLAP_3END_MAX" size="8" value = "" id="SPLICE_SITE_OVERLAP_3END_MAX" defVal="8" class="checkDef reset rs"/>
+                    <p>
+                    <label class="right inlinelabel">Minimal and maximal number of bases that must anneal to exons at the 5' or 3' side of the junction 
+
+                     
+                       <a class="helplink" title="help" href="#" id="SPLICE_SITE_OVERLAPHp"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>   
+                    </label>
+                    <p toggle="SPLICE_SITE_OVERLAPHp" class="helpbox hidden">
+                        This specifies the minimal number of bases that the primer must anneal to the template at 5' side (i.e., toward start of the primer) or 3' side (i.e., toward end of the primer) of the exon-exon junction.  Annealing to both exons is necessary as this ensures annealing to the exon-exon junction region but not either exon alone.  Note that this option is effective only if you select "Primer must span an exon-exon junction" for "Exon junction span" option.
+                    </p>
+                  </p>
+                 </div>
+                 <label class="m" for="SPAN_INTRON">Intron inclusion</label>
+                 <div class="input "> 
+                    <input type="checkbox"  name="SPAN_INTRON" id="SPAN_INTRON"  class="checkDef" defval="unchecked" />                    
+                    <label class="right inlinelabel" for="SPAN_INTRON">Primer pair must be separated by at least one intron on the corresponding genomic DNA</label>
+                    <a class="helplink" title="help" href="#" id="intron_spanHl"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="intron_spanHl" class="helpbox hidden">
+                        With this option on, the program will try to find primer pairs that are separated by at least one intron on the corresponding genomic DNA using mRNA-genomic DNA alignment from NCBI.  This makes it easy to distinguish between amplification from mRNA and genomic DNA as the product from the latter is longer due to presence of an intron.
+                    </p> 
+                 </div>
+                 <label class="m" for="MIN_INTRON_SIZE">Intron length range</label>
+                 <div class="input">                     
+                    <div class=" infl">                
+                        <label for="MIN_INTRON_SIZE">Min</label>        
+                        <label for="MAX_INTRON_SIZE" class="lbLm">Max</label>
+                    </div>                     
+                    <input type="text" name="MIN_INTRON_SIZE" size="5" value = "" id="MIN_INTRON_SIZE" defVal="1000" class="checkDef"/>                
+                    <input type="text" name="MAX_INTRON_SIZE" size="5" value = "" id="MAX_INTRON_SIZE" defVal="1000000" class="rs checkDef"/>
+                    <a class="helplink" title="help" href="#" id="MIN_INTRON_SIZEHp"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>   
+                        
+                    <p toggle="MIN_INTRON_SIZEHp" class="helpbox hidden">
+                        This specifies the range of total intron length on the corresponding genomic DNA that would separate the forward and revervse primers.
+                    </p>  
+                 </div>
+            </fieldset>
+            <span id="diffMesTop" class="diffMes">Note: Parameter values that differ from the default are highlighted in yellow</span> 
+            <fieldset class="  section">
+
+                <legend>Primer Pair Specificity Checking Parameters</legend>    
+                <label for="SEARCH_SPECIFIC_PRIMER" class="m ">Specificity check</label>
+                <div class="input "> 
+                    <input type="checkbox"  checked="checked" name="SEARCH_SPECIFIC_PRIMER" class="checkDef" id="SEARCH_SPECIFIC_PRIMER" defVal="checked" />
+                    <label class="right inlinelabel" for="SEARCH_SPECIFIC_PRIMER">Enable search for primer pairs specific to the intended PCR template</label>            
+                    <a class="helplink" title="help" href="#" id="primerSpHl"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="primerSpHl" class="helpbox hidden">
+                        With this option on, the program will search the primers against the selected database and determine whether a primer pair can generate a PCR product on any targets in the database based on their matches to the targets and their orientations.  The program will return, if possible, only primer pairs that do not generate a valid PCR product on unintended sequences and are therefore specific to the intended template.  Note that the specificity is checked not only for the forward-reverse primer pair, but also for forward-forward as well as reverse-reverse primer pairs. 
+                    </p>
+                </div>        
+                <label class="m" for="SEARCHMODE">Search mode</label>
+                <div class="input "> 
+                  <span class="sel poss">
+                    <select name="SEARCHMODE" id="SEARCHMODE" class="reset  checkDef" defVal="0" >
+                      <option selected="selected" value="0"  >Automatic</option>
+                      <option value="1"  >User guided</option>
+                      <option value="2"  >No user guidance</option>
+                    </select> 
+                  </span>
+                     <a class="helplink" title="help" href="#" id="SEARCHMODE_H"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                  <p toggle="SEARCHMODE_H" class="helpbox hidden">
+                    Primer-blast tries to find target-specific primers by placing candidate primers on unique template regions that are not similar to other targets.  However, in some cases, primer-blast cannot determine if a database sequence is an intended target or not, thus the user guidance might be helpful (For example, when your template is a polymorphic form or a partial region of an entry in the search database, or when the database such as the nr contains redundant entries of your template). 
+<br>
+The "Automatic" option will ask for user guidance only when the program does not find sufficient unique template regions while the "User guided" option will always ask for user guidance if your template shows high similarity to any other database sequences. 
+ 
+                     </p>
+                </div>
+
+                <label for="PRIMER_SPECIFICITY_DATABASE" class="m ">Database</label>
+       
+                <div class="input ">               
+                  <span class="sel psd">
+<select name="PRIMER_SPECIFICITY_DATABASE" id="PRIMER_SPECIFICITY_DATABASE" class="reset  checkDef" defVal="refseq_mrna" >
+  <option selected="selected" value="refseq_mrna"  orgDict="blast_refseq_mrna_sg">Refseq mRNA</option>
+  <option value="refseq_representative_genomes"  orgDict="blast_refseq_representative_genomes_sg">Refseq reference genomes</option>
+  <option value="PRIMERDB/genome_selected_species"  orgDict="bdb_pb_sel_org_sg" orgDbs="on">Genomes for selected eukaryotic organisms (primary assembly only)</option>
+  <option value="core_nt"  orgDict="taxids_sg" >core_nt</option>
+  <option  value="refseq_rna"  orgDict="blast_refseq_rna_sg" >Refseq RNA (refseq_rna)</option>
+  <option value="Custom"   >Custom (use your own sequence accession, assembly accession, etc.)</option>
+  <option value="nt"  orgDict="taxids_sg" >nt</option>
+</select> 
+                    </span>
+                   <a class="helplink hiding" title="help" id="databaseHelp" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="databaseHelp" class="helpbox hidden">
+                    Refseq mRNA:
+                    <br>&nbsp&nbsp&nbsp This contains mRNA only from NCBI's Reference Sequence collection<br> 
+                     <br>
+                      Refseq reference genomes:
+                     <br>&nbsp&nbsp&nbsp This database contains NCBI RefSeq Reference genomes across broad taxonomy groups including eukaryotes, bacteria, archaea, viruses and viroids.  These genomes are among the best quality genomes available at NCBI and have minimum redundancy.  For the eukaryotes, only one genome is included per species (However, alternate loci of eukaryotic genomes are included where applicable).  For other species, genomes from diverse isolates of the same species may be included.  Mitochondrion genomes are included where applicable.<br><br>
+
+		     core_nt:
+		     <br>&nbsp&nbsp&nbsp It is the same as nt except that it does not have the eukaryotic chromosomal sequences that are part of NCBI genome assemblies. The search speed is much faster than nt. We highly recommend using it over nt.<br><br>
+		     
+                     Refseq RNA:
+                    <br>&nbsp&nbsp&nbsp This contains all RNA entries from NCBI's Reference Sequence collection<br><br>
+                     Genomes for selected eukaryotic organisms (primary assemblies only):
+                      <br>&nbsp&nbsp&nbspThese are Refseq reference genomes from primary chromosome assemblies (i.e., no alternate loci) for many eukaryotic organisms. Mitochondrion and plastid genomes are also included where applicable.
+<br><br>
+
+Although sequences in this database are completely covered by the Refseq reference genomes database, it does not contain the alternate loci and thus avoids sequence redundancy introduced by including alternate loci.  This database is recommended if you are not considering variations represented by alternate loci.
+
+                      <br><br>
+                                              
+                       Custom:
+                        <br>
+                       &nbsp&nbsp&nbspYou can use your own sequences including nucleotide accessions, genome assembly accessions (such as GCF_000001635.27) or FASTA sequences as a search database. A maximum of 20 assembly accessions are allowed.  FASTA sequences are limited to 300M. Note that the organism field is ignored for custom database.
+ 
+                    </p>
+                    <div id="custInp">
+                    <label for="CUSTOM_DB">Enter sequence accession, FASTA sequence or assembly accession (<font color="red">Use file upload below for large input</font>) </label>
+                    <a href="#" class="clearlink" fieldToClear="CUSTOM_DB" id="clearcust">Clear</a>
+                    <br>
+                    <textarea rows="5" cols="80" id="CUSTOM_DB" name="CUSTOM_DB" ></textarea>
+                    <br>Or, upload file:<input type="file" name="CUSTOMSEQFILE" />
+                    </div> 
+                  <input type="hidden" id="primerSpecDBID" value=""/>
+                </div> 
+      <div id="excl" class=""> 
+   <label class="m">Exclusion
+     <span class="hint"></span>
+   </label>
+    <div class="input">
+                    <input type="checkbox"  name="EXCLUDE_XM" class="reset checkDef"  id="EXCLUDE_XM" defVal="unchecked"  />
+                      <label  for="EXCLUDE_XM"><span class="acPromt">Exclude </span>predicted Refseq transcripts (accession with XM, XR prefix)  </label>
+                      
+                      <input type="checkbox"  name="EXCLUDE_ENV" class="reset checkDef"  id="EXCLUDE_ENV"  defVal="unchecked"  />
+                        <label for="EXCLUDE_ENV" id="exclSeqUncultLb"><span class="acPromt">Exclude </span>uncultured/environmental sample sequences</label>              
+                        
+         <a class="helplink" title="help" href="#" id="exclusion_help"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                      <p toggle="exclusion_help" class="helpbox hidden">
+                        You can choose to exclude sequences in the selected database from specificity checking if you are not concerned about these.  There are a large number of predicted Refseq transcripts in the Refseq mRNA, Refseq RNA and nr database.  There are also many uncultured/environmental sample sequencesare in the nr database.  
+                    </p>             
+    </div>
+    </div>
+              <div id="org" class="">
+                <label for="ORGANISM" class="m ">Organism</label>
+       
+                <div class="input ">                    
+                    <div id="orgs">                    
+                    <input name="ORGANISM" size="55"  type="text" id="ORGANISM" value="Homo sapien (taxid:9606)" data-jigconfig="dictionary:'taxids_sg'" autocomplete="off" data-jig="ncbiautocomplete" class="reset checkDef" defVal="Homo sapien (taxid:9606)"/>                                       
+                    <input type="button" class="usa-button-secondary" id="AddOrg" value="Add organism">
+                    </div>
+                    <input type="hidden" value = "" name = "ALLOW_NO_ORGANISM" id= "ALLOW_NO_ORGANISM" defVal="NO"/>
+                    <input type="hidden" value = "1" id="numOrg" />  
+                    <input type="hidden" value = "" name="ORG_DBS" id="orgDbs" />
+                    <input type="text" value = ""  name="slctOrg" class="hidden" id="slctOrg" />
+                    <p class="help">Enter an organism name (or organism group name such as enterobacteriaceae, rodents), taxonomy id or select from the suggestion list as you type.
+                        <a id="selorg" class="helplink hiding" title="help" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    </p>                                        
+                    
+                    
+                    <p class="helpbox hidden" toggle="selorg">
+            This will limit the primer specificity checking to the specified organism.  It is strongly recommended that you always specify the organism if you are amplifying DNA from a specific organism (because searching all organisms will be much slower and off-target priming from other organisms is irrelevant).  Click on "Add more organisms" label if you want to restrict to multiple organisms (enter only one organism in each input box).
+      </p>          
+
+                </div>
+              </div>
+                
+              <div id="entrezQuery"  class="">
+                <label for="ENTREZ_QUERY" class="m ">Entrez query
+                    <span class="hint">(optional)</span>
+                </label>
+                <div class="input ">
+                    <input class="reset" size="36" name="ENTREZ_QUERY" value="" type="text" id="ENTREZ_QUERY" />
+                    <a class="helplink" title="help" href="#" id="entrezquery"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="entrezquery" class="helpbox hidden">
+                      You can use a regular entrez query to limit the database search for primer specificity.  For example, enter a GenBank accession number to limit search to that particular sequence only (Caution: this means the primer specificity will NOT be checked against any other sequences except the specified one). 
+                    </p>
+                </div>
+              </div>  
+                <label for="PRIMER_SPECIFICITY_MISMATCH" class="m ">Primer specificity stringency</label>
+                <div class="input twln"> Primer must have at least
+                    <span class="sel so">                    
+                    <select name="TOTAL_PRIMER_SPECIFICITY_MISMATCH" id="PRIMER_SPECIFICITY_MISMATCH" class="reset checkDef" defVal="1">
+                        <option value = "0"  >1</option>
+                        <option selected="selected"  value = "1">2</option>
+                        <option  value = "2">3</option>
+                        <option  value = "3">4</option>
+                        <option  value = "4">5</option>
+                        <option  value = "5">6</option>
+                    </select></span> total mismatches
+                    to unintended targets, including<br>
+                    at least
+                    <span class="sel so">
+                    <select name="PRIMER_3END_SPECIFICITY_MISMATCH" id="PRIMER_3END_SPECIFICITY_MISMATCH" class="reset checkDef" defVal="1">
+                        <option  value = "0">1</option>
+                        <option  value = "1" selected="selected" >2</option>
+                        <option  value = "2">3</option>
+                        <option  value = "3">4</option>
+                        <option  value = "4">5</option>
+                        <option  value = "5">6</option>
+                    </select></span>
+                    mismatches within the last
+                    <span class="sel so">
+                    <select name="MISMATCH_REGION_LENGTH" ID="MISMATCH_REGION_LENGTH" class="reset checkDef" defVal="5">
+                        <option  value = "1">1 </option>
+                        <option  value = "2">2 </option>
+                        <option  value = "3">3</option>
+                        <option  value = "4">4</option>
+                        <option  value = "5" selected="selected" >5</option>
+                        <option  value = "6">6 </option>
+                        <option  value = "7">7</option>
+                        <option  value = "8">8</option>
+                        <option  value = "9">9</option>
+                        <option  value = "10">10</option>
+                        <option  value = "11">11</option>
+                        <option  value = "12">12</option>
+                        <option  value = "13">13</option>
+                        <option  value = "14">14</option>
+                        <option  value = "15">15</option>
+                        <option  value = "16">16</option>
+                        <option  value = "17">17</option>
+                        <option  value = "18">18</option>
+                        <option  value = "19">19</option>
+                        <option  value = "20">20</option>
+                        <option  value = "21">21</option>
+                        <option  value = "22">22</option>
+                       
+                    </select></span> bps at the 3' end. 
+                       <a class="helplink hiding" title="help" id="primerSpMsHl" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="primerSpMsHl" class="helpbox hidden">
+                        This requires at least one primer (for a given primer pair) to have the specified number of mismatches to unintended targets.  The larger the mismatches (especially those toward 3' end) are between primers and the unintended targets, the more specific the primer pair is to your template (i.e., it will be more difficult to anneal to unintended targets).  However, specifying a larger mismatch value may make it more difficult to find such specific primers.  Try to lower the mismatch value in such case. 
+                   
+                    </p><br>
+                    Ignore targets that have   
+                    <span class="sel so">                    
+                    <select name="TOTAL_MISMATCH_IGNORE" id="TOTAL_MISMATCH_IGNORE" class="reset checkDef" defVal="6">
+                         
+                           <option  value = "1">1</option>
+                          <option  value = "2">2</option>
+                          <option  value = "3">3</option>
+                          <option  value = "4">4</option>
+                          <option  value = "5">5</option>
+                          <option selected="selected"  value = "6">6</option>
+                          <option  value = "7">7</option>
+                          
+                          <option  value = "8">8</option>
+                          <option  value = "9">9</option>
+                    </select></span> or more mismatches to the primer. 
+                        <a class="helplink hiding" title="help" id="primerTMI" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="primerTMI" class="helpbox hidden">
+                      This is another parameter that can be used to adjust primer specificity stringecy.  If the total number of mismatches between target and at least one primer (for a given primer pair) is equal to or more than the specified number (regardless of the mismatch locations), then any such targets will be ignored for primer specificity check.  For examaple, if you are only interested in targets that perfectly match the primers, you can set the value to 1.  You can also lower the E value (see advanced parameters) in such case to speed up the search as the high default E value is not necessary for detecting targets with few mismatches to primers.  <br>
+ Additionally this program has limit detecting targets that are too different from the primers...it will detect targets that have up to 35% mismatches to the primer sequences (i.e., a total of 7 mismatches for a 20-mer).<br>
+You may need to choose more sensitive blast parameters (under advance parameters) if you want to detect targets with a higher number of mismatches than default. 
+              
+                    </p><br>
+                   
+                </div>
+         
+
+
+                <label for="MAX_TARGET_SIZE" class="m ">Max target amplicon size</label>
+                <div class="input ">         
+                    <input name="MAX_TARGET_SIZE" value="" class="checkDef" size = "6" id="MAX_TARGET_SIZE" defval="4000"/>      
+                    <a class="helplink hiding" title="help" id="primerSpMTZ" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="primerSpMTZ" class="helpbox hidden">
+                        This specifies the max amplicon size for a PCR target to be detected by Primer-BLAST.  In general, the non-specific targets become less of a concern if their sizes are very large since PCR is much less efficient for larger amplicons.
+                    </p>
+                </div>
+         
+                <label class="m ">Allow splice variants</label> 
+<div class="input "> 
+    <input type="checkbox" name="ALLOW_TRANSCRIPT_VARIANTS"  class="reset checkDef" id="ALLOW_TRANSCRIPT_VARIANTS" defval="unchecked"/>
+    <label class="right inlinelabel" for="ALLOW_TRANSCRIPT_VARIANTS">Allow primer to amplify mRNA splice variants (requires refseq mRNA sequence as PCR template input)  </label>
+    <a class="helplink" title="help" href="#" id="primerSpAmHl"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+    <p toggle="primerSpAmHl" class="helpbox hidden">
+        If enabled, this program will NOT exclude the primer pairs that can amplify one or more mRNA splice variants from the same gene as your PCR template, thus making primers gene-specific rather than transcript-specific (Note that it is NOT intended to generate primers that will amplify all variants.  It only means that the primers may amplify one or more other slice variants, in addition to the one you have specified).  Enabling this option will make it much easier to find gene-specific primers since there is no need to distinguish between splice variants.  This option requires you to enter a refseq mRNA accession or gi or fasta sequence as PCR template input because other type of input may not allow the program to properly interpret the result.
+    </p>
+</div>              
+         
+            </fieldset>
+
+            </div> <!-- query -->
+
+            <div class="searchInfo ">        
+                <div class="summary">
+                    <input type="button" value="Get Primers" class="blastbutton prbutton" />                    
+                </div>        
+                <div class="searchsummary">
+                    <div class="openNewWin ">            
+                        <input class="newwin checkDef" type="checkbox" name="NEWWIN"  id="nw1" form="searchForm" winType="random" defVal="unchecked" />
+                        <label class="inlineLabel " for="nw1">Show results in a new window</label>
+                        <input class="newwin checkDef" type="checkbox" name="SHOW_SVIEWER" CHECKED id="show_sviewer1" form="searchForm" winType="random" defVal="checked"/>
+                        <label class="inlineLabel " for="show_sviewer1">Use new graphic view</label>
+                        <a class="helplink" title="help" href="#" id="SHOW_SVIEWER_HELP1"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                        <p toggle="SHOW_SVIEWER_HELP1" class="helpbox hidden">
+                            This enables our new graphic display that offers enhanced overview for your template and primers.
+                        </p>  
+                    </div>
+                </div>        
+            </div> 
+
+   <div class="usa-accordion" id="optSection">
+   <span class="diffMes" id="diffMes">Note: Parameter values that differ from the default are highlighted in yellow</span> 
+   <div id="sopts" class="section">       
+   <button class="usa-accordion-button sectAccordion" aria-expanded="false" aria-controls="moreopts" id="btnDescrOver"> Advanced parameters
+        <i aria-hidden="true" class="fa fa-plus ncbi-button-icon"></i>
+        <i aria-hidden="true" class="fa fa-minus ncbi-button-icon"></i>
+    </button>     
+   
+   <div id="moreopts" class="usa-accordion-content" aria-hidden="true"> 
+   
+ <fieldset class=" section"> 
+      
+         <legend>Primer Pair Specificity Checking Parameters</legend>
+
+                      <label for="HITSIZE" class="m ">Max number of sequences returned by Blast</label>
+         <div class="input "> 
+                      <span class="sel si">
+                      <select name="HITSIZE" id="HITSIZE" class= "opts checkDef" defVal="50000" >
+                        <option  value="10">10</option>
+                        <option  value="50">50</option>
+                        <option  value="100">100</option>
+                        <option  value ="250">250</option>
+                        <option  value="500">500</option>
+                        <option  value="1000">1000</option>
+                        <option  value="10000">10000</option>
+                        <option selected="selected"  value="50000">50000</option>
+                        <option  value="100000">100000</option>
+                      </select>                       
+                    </span>
+                    <a class="helplink hiding" title="help" id="hitsizeHelp" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="hitsizeHelp" class="helpbox hidden">
+                      Maximum number of database sequences (with unique sequence identifier) Blast finds for primer-blast to screen for primer pair specificities. Note that the actual number of similarity regions (or the number of hits) may be much larger than this (for example, there may be a large number of hits on a single target sequence such as a chromosome).   Choose a higher value if you need to perform more stringent search. 
+                    </p>      
+        
+        </div>
+                    <input type="hidden" value ="on" name="UNGAPPED_BLAST" id="UNGAPPED_BLAST" />
+      
+                      <label for="EVALUE" class="m ">Blast expect (E) value</label>
+         <div class="input ">               
+                      <span class="sel si">
+                      <select name="EVALUE" id="EVALUE" class="opts checkDef" defVal="30000">
+                        <option  value="100" >100</option>
+                        <option  value = "1000">1000</option>
+                        <option  value="10000" >10000</option>  
+                        <option selected="selected"  value="30000" >30000</option>
+                        <option  value="50000" >50000</option>
+                        <option  value="100000" >100000</option> 
+                    </select> 
+                    </span>
+                <a class="helplink hiding" title="help" id="evalueHelp" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="evalueHelp" class="helpbox hidden">
+                      Expected number of chance matches in a random model.  A higher E value should be used if you want more stringent specificity checking (i.e., to identify targets that have more mismatches to the primers, in addition to the perfectly matched targets).  On the other hand, a lower E value is recommended if you are only interested in perfect or nearly perfect matches as this will significatly shorten the search time. 
+                    </p>      
+        
+     </div>
+                                        
+                    <label for="WORD_SIZE" class="m ">Blast word size</label>
+                    <div class="input ">               
+                      <span class="sel si">
+                        <select name="WORD_SIZE" id="WORD_SIZE" class="opts checkDef" defVal="7">
+                          <option  value="6" >6</option>
+                          <option selected="selected"  value="7" >7</option>  
+                          <option  value="8" >8</option>
+                          <option  value="9" >9</option>
+                          <option  value="10" >10</option>
+                        </select> 
+                    </span>
+                <a class="helplink hiding" title="help" id="wordsizeHelp" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="wordsizeHelp" class="helpbox hidden">
+                      The minimal number of contiguous nucleotide base matches between the query sequence and the target sequence that is needed for BLAST to detect the targets.  Set a lower value if you need to find target sequences with more mismatches to your primers.  However this will increase the search time.
+                    </p>      
+        
+     </div>
+                                                        
+                      <label for="MAX_CANDIDATE_PRIMER" class="m ">Max primer pairs to screen</label>
+       
+                <div class="input ">       
+                    <span class="sel si">        
+                    <select name="MAX_CANDIDATE_PRIMER" id="MAX_CANDIDATE_PRIMER" class="opts checkDef" defVal="500">
+                    <option selected="selected"  value="500">500</option>  
+                    <option  value="1000">1000</option>    
+                             
+                    <option  value="2000">2000</option>
+                          
+                    </select> 
+                    </span>
+                   <a class="helplink hiding" title="help" id="maxprimerscreenHelp" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                    <p toggle="maxprimerscreenHelp" class="helpbox hidden">
+                    The maximum number of candidate primer pairs to screen in order to find specific primer pairs (The candidate primers are generated by primer3 program).  Increasing this number can increase the chance of finding a specific primer pair but the process will take longer.
+                    </p>
+                </div>
+
+                    <label for="NUM_TARGETS" class="m ">Max targets to show (for designing new primers)</label>
+                    <div class="input ">
+                    <input size="10" name="NUM_TARGETS" value="" type="text" id="NUM_TARGETS" defVal="20" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="NUMTARGETS"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="NUMTARGETS" class="helpbox hidden">
+                       The maximum number of PCR targets (amplicons) to be shown when designing new primers. 
+                    </p>
+                        <br><br>
+                    </div>
+                      <label for="NUM_TARGETS_WITH_PRIMERS" class="m ">Max targets to show (for pre-designed primers)</label>
+                    <div class="input ">
+                    <input size="10" name="NUM_TARGETS_WITH_PRIMERS" value="" type="text" id="NUM_TARGETS_WITH_PRIMERS" defVal="1000" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="NUMTARGETS_WITH_PRIMERS"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="NUMTARGETS_WITH_PRIMERS" class="helpbox hidden">
+                       The maximum number of PCR targets (amplicons) to be shown when checking specificity for pre-designed primers. 
+                    </p>
+                    </div>
+                      
+                      <label for="MAX_TARGET_PER_TEMPLATE" class="m ">Max targets per sequence</label>
+                    <div class="input ">
+                    <input size="10" name="MAX_TARGET_PER_TEMPLATE" value="" type="text" id="MAX_TARGET_PER_TEMPLATE" defVal="100" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="MAXTARGET_PER_TEMPLATE"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="MAXTARGET_PER_TEMPLATE" class="helpbox hidden">
+                       The maximum number of PCR targets (amplicons) to be found on any single sequence in the search database.  
+                    </p>
+                    </div>
+
+</fieldset>
+
+     <fieldset class=" section">
+      
+         <legend>Primer Parameters</legend>
+
+         <label for="PRODUCT_TM" class="m  r">PCR Product Tm</label>
+       
+         <div class="input ">               
+             <div class=" infl">
+                <label for="PRODUCT_MIN_TM">Min</label>
+                <label class="lbLm" for="PRODUCT_OPT_TM">Opt</label>
+                <label class="lbLm" for="PRODUCT_MAX_TM">Max</label>                
+             </div>
+             <input size="4" name="PRODUCT_MIN_TM" value="" type="text" id="PRODUCT_MIN_TM" defVal="" class="opts checkDef" />                
+             <input size="4" name="PRODUCT_OPT_TM" value="" type="text" id="PRODUCT_OPT_TM" defVal="" class="rs opts checkDef" />
+             <input size="4" name="PRODUCT_MAX_TM" value="" type="text" id="PRODUCT_MAX_TM" defVal="" class="rs opts checkDef" />
+             
+            
+         </div>
+               
+
+         <label for="PRIMER_MIN_SIZE" class="m  r">Primer Size</label>
+       
+         <div class="input ">               
+             <div class=" infl">
+                <label for="PRIMER_MIN_SIZE">Min</label>
+                <label class="lbLm" for="PRIMER_OPT_SIZE">Opt</label>
+                <label class="lbLm" for="PRIMER_MAX_SIZE">Max</label>                
+             </div>
+             <input size="4" name="PRIMER_MIN_SIZE" value="" type="text" id="PRIMER_MIN_SIZE" class="opts checkDef" defVal="15"/>
+             <input size="4" name="PRIMER_OPT_SIZE" value="" type="text" id="PRIMER_OPT_SIZE" class="rs opts checkDef" defVal="20"/>
+             <input size="4" name="PRIMER_MAX_SIZE" value="" type="text" id="PRIMER_MAX_SIZE" class="rs opts checkDef" defVal="25"/>
+             
+            
+         </div>
+               
+         
+         
+         <label for="PRIMER_MIN_GC" class="m  r">Primer GC content (%)</label>
+         <div class="input ">               
+             <div class="">                
+                <label for="PRIMER_MIN_GC">Min</label>                
+                <label for="PRIMER_MAX_GC" class="lbLm">Max</label>
+             </div>             
+             <input size="4" name="PRIMER_MIN_GC" value="" type="text" id="PRIMER_MIN_GC" defVal="20.0" class="opts checkDef"/>             
+             <input size="4" name="PRIMER_MAX_GC" value="" type="text" id="PRIMER_MAX_GC" defVal="80.0" class="rs opts checkDef" />
+            
+            
+         </div>
+         
+
+                    <label for="GC_CLAMP" class="m ">GC clamp</label>
+                    <div class="input ">
+                    <input size="2" name="GC_CLAMP" value="" type="text" id="GC_CLAMP" defVal="0" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="GCCLAMP"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="GCCLAMP" class="helpbox hidden">
+                       The number of consecutive Gs and Cs at the 3' end of both the left and right primer.
+                    </p>
+                    </div>
+
+                    <label for="POLYX" class="m ">Max Poly-X</label>
+                    <div class="input">
+                    <input size="2" name="POLYX" value="" type="text" id="POLYX" defVal="5" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="Poly_X"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="Poly_X" class="helpbox hidden">
+                       The maximum allowable length of a mononucleotide repeat, for example AAAAAA. 
+                    </p>
+                    </div>
+                    
+                    <label for="PRIMER_MAX_END_STABILITY" class="m ">Max 3' Stability</label>
+                    <div class="input">
+                    <input size="2" name="PRIMER_MAX_END_STABILITY" value="" type="text" id="PRIMER_MAX_END_STABILITY" defVal="9" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="END_STABILITY"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="END_STABILITY" class="helpbox hidden">
+                          The maximum stability for the last five 3' bases of a left or right primer. Bigger numbers mean more stable 3' ends.
+                    </p>
+                    </div>
+
+                    <label for="PRIMER_MAX_END_GC_INPUT" class="m ">Max GC in primer 3' end</label>
+                    <div class="input">
+                    <input size="2" name="PRIMER_MAX_END_GC" value="" type="text" id="PRIMER_MAX_END_GC" defVal="5" class="opts checkDef" />
+                    <a class="helplink" title="help" href="#" id="MAX_END_GC"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="MAX_END_GC" class="helpbox hidden">
+                          The maximum number of Gs or Cs allowed in the last five 3' bases of a left or right primer.
+                    </p>
+                    </div>
+
+                    <label for="ThStruct" class="m ">Secondary Structure Alignment Methods</label>
+                    <div id="ThStructParams">
+                      <div class="input">
+                    <input type="checkbox"   name="TH_OLOGO_ALIGNMENT" class="checkDef"  id="TH_OLOGO_ALIGNMENT" defVal="unchecked"  />
+                      <label class="right inlinelabel" for="TH_OLOGO_ALIGNMENT"><span class="acPromt">Use </span>Thermodynamic Oligo Alignment</label>
+                          
+                      
+                      <input type="checkbox"  name="TH_TEMPLATE_ALIGNMENT" class="reset checkDef"  id="TH_TEMPLATE_ALIGNMENT"  defVal="unchecked"  />
+                        <label class="right inlinelabel" for="TH_TEMPLATE_ALIGNMENT" id="exclSeqUncultLb"><span class="acPromt">Use </span>Thermodynamic Template Alignment (warning: search may be very slow with this option on)</label>              
+                        
+         <a class="helplink" title="help" href="#" id="th_template_help"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                      <p toggle="th_template_help" class="helpbox hidden">
+                        The option "Use Thermodynamic Oligo Alignment" instructs Primer3 to use thermodynamic alignment models (instead of old traditional secondary structure alignment) for calculating the propensity of oligos to form hairpins and dimers while the option "Use Thermodynamic Template Alignment" instructs Primer3 to use thermodynamic alignment models (instead of old traditional secondary structure alignment) for calculating the propensity of oligos to anneal to undesired sites in the template sequence.
+                    </p>             
+    </div>
+
+                    <label for="PRIMER_MAX_TEMPLATE_MISPRIMING_TH"  class="m r">TH: Max Template Mispriming</label>
+                    <div class="input">                    
+                    <div class="">                
+                    <label for="PRIMER_MAX_TEMPLATE_MISPRIMING_TH">Primer</label>
+                    <label for="PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING_TH" class="lbLm">Pair</label>                    
+                    </div>                                              
+                    <input size="4" name="PRIMER_MAX_TEMPLATE_MISPRIMING_TH" value="" type="text" id="PRIMER_MAX_TEMPLATE_MISPRIMING_TH" class="opts checkDef" defVal="40.00"/>                    
+                    <input size="4" name="PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING_TH" value="" type="text" id="PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING_TH" class="rs opts checkDef" defVal="70.00" /> (For thermodynamic alignment model only)                                    
+                    </div>
+
+                                        
+                    <label for="PRIMER_MAX_SELF_ANY_TH"  class="m r">TH: Max Self Complementarity</label>
+                    <div class="input">
+                    <div class="">                
+                    <label for="PRIMER_MAX_SELF_ANY_TH">Any</label>
+                    <label for="PRIMER_MAX_SELF_END_TH" class="lbLm">3'</label>                    
+                    </div>                    
+                    <input size="4" name="PRIMER_MAX_SELF_ANY_TH" value="" type="text" id="PRIMER_MAX_SELF_ANY_TH" class="opts checkDef" defVal="45.0"/>                   
+                    <input size="4" name="PRIMER_MAX_SELF_END_TH" value="" type="text" id="PRIMER_MAX_SELF_END_TH" class="rs opts checkDef" defVal="35.0"/> (For thermodynamic alignment model only)
+                    </div>
+                    
+                    <label for="PRIMER_PAIR_MAX_COMPL_ANY_TH"  class="m r">TH: Max Pair Complementarity</label>
+                    <div class="input">
+                    <div class="">                
+                    <label for="PRIMER_PAIR_MAX_COMPL_ANY_TH">Any</label>
+                    <label for="PRIMER_PAIR_MAX_COMPL_END_TH" class="lbLm">3'</label>                    
+                    </div>                                        
+                    <input size="4" name="PRIMER_PAIR_MAX_COMPL_ANY_TH" value="" type="text" id="PRIMER_PAIR_MAX_COMPL_ANY_TH" class="opts checkDef" defVal="45.0"/>                                        
+                    <input size="4" name="PRIMER_PAIR_MAX_COMPL_END_TH" value="" type="text" id="PRIMER_PAIR_MAX_COMPL_END_TH" class="rs opts checkDef" defVal="35.0"/> (For thermodynamic alignment model only)
+                    </div>                                        
+                                        
+                    
+                    <label for="PRIMER_MAX_HAIRPIN_TH"  class="m">TH: Max Primer Hairpin</label>
+                    <div class="input">                    
+                    <input size="4" name="PRIMER_MAX_HAIRPIN_TH" value="" type="text" id="PRIMER_MAX_HAIRPIN_TH" class="opts checkDef" defVal="24.0"/> (For thermodynamic alignment model only)
+                    </div>
+                    </div>
+                    
+                    <!-- Template mispriming (two input fields) -->
+                    <div id="OldStructParams">
+                    
+                    <label for="PRIMER_MAX_TEMPLATE_MISPRIMING"  class="m r">Max Template Mispriming</label>
+                    <div class="input">
+                    <div class="">                
+                    <label for="PRIMER_MAX_TEMPLATE_MISPRIMING">Primer</label>
+                    <label for="PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING" class="lbLm">Pair</label>                    
+                    </div>                                                            
+                    <input size="4" name="PRIMER_MAX_TEMPLATE_MISPRIMING" value="" type="text" id="PRIMER_MAX_TEMPLATE_MISPRIMING" class="opts checkDef" defVal="12.00"/>                                                            
+                    <input size="4" name="PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING" value="" type="text" id="PRIMER_PAIR_MAX_TEMPLATE_MISPRIMING" class="rs opts checkDef" defVal="24.00"/> (For old secondary structure alignment model only) 
+                    </div>             
+                                                            
+                    <label for="PRIMER_MAX_SELF_ANY"  class="m r">Max Self Complementarity</label>
+                    <div class="input">
+                    <div class="">                
+                    <label for="PRIMER_MAX_SELF_ANY">Any</label>
+                    <label for="PRIMER_MAX_SELF_END" class="lbLm">3'</label>                    
+                    </div>                                        
+                    <input size="4" name="SELF_ANY" value="" type="text" id="SELF_ANY" class="opts checkDef" defVal="8.00"/>                                        
+                    <input size="4" name="SELF_END" value="" type="text" id="SELF_END" class="rs opts checkDef" defVal="3.00"/> (For old secondary structure alignment model only) 
+                    </div>             
+                     
+                    <label for="PRIMER_PAIR_MAX_COMPL_ANY"  class="m r">Max Pair Complementarity</label>
+                    <div class="input">
+                    <div class="">                
+                    <label for="PRIMER_PAIR_MAX_COMPL_ANY">Any</label>
+                    <label for="PRIMER_PAIR_MAX_COMPL_END" class="lbLm">3'</label>                    
+                    </div>                                                            
+                    <input size="4" name="PRIMER_PAIR_MAX_COMPL_ANY" value="" type="text" id="PRIMER_PAIR_MAX_COMPL_ANY" class="opts checkDef" defVal="8.00"/>                    
+                    <input size="4" name="PRIMER_PAIR_MAX_COMPL_END" value="" type="text" id="PRIMER_PAIR_MAX_COMPL_END" class="rs opts checkDef" defVal="3.00"/> (For old secondary structure alignment model only) 
+                    </div>                                 
+                    
+                    </div>
+                    <!-- Template mispriming (two input fields) end -->
+
+
+                    <label for="EXCLUDED_REGIONS" class="m ">Excluded regions</label>
+                    <div class="input">
+                      <input class="reset" size="70" name="EXCLUDED_REGIONS" value="" type="text" id="EXCLUDED_REGIONS" />
+                        <a class="helplink" title="help" href="#" id="exclReg"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                        <p toggle="exclReg" class="helpbox hidden">
+                          E.g. 401,7 68,3 forbids selection of primers in the 7 bases starting at 401 and the 3 bases at 68. Or mark the source sequence with < and >: e.g. ...ATCT&lt;CCCC&gt;TCAT... forbids primers in the central CCCC.  
+                        </p>
+                    </div>
+                      <label for="OVERLAP" class="m ">Overlap junctions</label>
+                    <div class="input">
+                      <input class="reset" size="70" name="OVERLAP" value="" type="text" id="OVERLAP" />
+                        <a class="helplink" title="help" href="#" id="overlapHelp"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                        <p toggle="overlapHelp" class="helpbox hidden">
+                          Enter a list of space separated nucleotide positions.  This requires that the left or the right primers to span a junction that is just 3' of any such positions.  For example, entering "50 100" would mean that the left or the right primers must span the junction between nucleotide position 50 and 51  or the junction between position 100 and 101 (counting from 5' to 3').  You can also specify in the fields below the minimal number of nucleotides that the left or the right primer must have on either side of the junctions.  This option is useful if you want a primer to a span specific junction on the template.  Note that this option cannot be used in association with the "Exon/intron selection" options above.
+                        </p>
+                    </div>
+                <div class="input "> 
+                  <div class=" infl">                
+                    <label for="OVERLAP_5END">5' side overlaps</label>
+                    <label for="OVERLAP_3END" id="lbEbo" class="lbLm">3' side overlaps</label>
+                  </div>   
+                  <input type="text" name="OVERLAP_5END" size="5" value = "" id="OVERLAP_5END" defVal="7" class="checkDef reset"/> 
+                    <input type="text" name="OVERLAP_3END" size="5" value = "" id="OVERLAP_3END" defVal="4" class="checkDef reset rs"/>
+                    <p>
+                    <label class="right inlinelabel">Minimal number of nucleotides that the left or the right primer must have at the 5' or 3' side of the junctions 
+
+                      
+                    </label>
+                    
+                 </div>
+
+                    <label for="MONO_CATIONS" class="m ">Concentration of monovalent cations</label>
+                    <div class="input ">
+                    <input size="6" name="MONO_CATIONS" value="" type="text" id="MONO_CATIONS" class="opts checkDef" defVal="50.0"/>
+                    <a class="helplink" title="help" href="#" id="MONOCAT"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="MONOCAT" class="helpbox hidden">
+                        The millimolar concentration of salt (usually KCl) in the PCR. Primer3 uses this argument to calculate oligo melting temperatures. 
+                    </p>
+                </div>
+            
+                    <label for="DIVA_CATIONS" class="m ">Concentration of divalent cations</label>
+                    <div class="input ">
+                    <input size="6" name="DIVA_CATIONS" value="" type="text" id="DIVA_CATIONS" class="opts checkDef" defVal="1.5"/>
+                    <a class="helplink" title="help" href="#" id="DIVACAT"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="DIVACAT" class="helpbox hidden">
+                        The millimolar concentration of divalent salt cations (usually MgCl2+ in the PCR). Primer3 converts concentration of divalent cations to concentration of monovalent cations using formula suggested in the paper <a href="http://www.clinchem.org/cgi/content/full/47/11/1956" target="blank"> Ahsen et al., 2001</a>.  
+                     [Monovalent cations] = [Monovalent cations] + 120*(v([divalent cations] - [dNTP])).  According to the formula concentration of desoxynucleotide triphosphate [dNTP] must be smaller than concentration of divalent cations. The concentration of dNTPs is included to the formula beacause of some magnesium is bound by the dNTP. Attained concentration of monovalent cations is used to calculate oligo/primer melting temperature. See Concentration of dNTPs to specify the concentration of dNTPs. 
+                    </p>
+                    </div> 
+                    <label for="CON_DNTPS" class="m ">Concentration of dNTPs </label>
+                    <div class="input ">
+                    <input size="6" name="CON_DNTPS" value="" type="text" id="CON_DNTPS" class="opts checkDef" defVal="0.6"/>
+                    <a class="helplink" title="help" href="#" id="CONDNTPS"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="CONDNTPS" class="helpbox hidden">
+                        The millimolar concentration of deoxyribonucleotide triphosphate. This argument is considered only if Concentration of divalent cations is specified.
+                    </p>
+                    </div>
+                    <label for="SALT_FORMULAR" class="m ">Salt correction formula</label>
+                    <div class="input ">
+                    <span class="sel ssf">
+                    <select name="SALT_FORMULAR" id="SALT_FORMULAR" class="opts checkDef" defVal="1">
+                        <option  value="0"> Schildkraut and Lifson 1965
+                        </option><option selected="selected"  value="1">SantaLucia 1998
+                        </option><option  value="2">Owczarzy et. 2004
+                        </option></select></span>
+                    <a class="helplink" title="help" href="#" id="SALTFORMULAR"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="SALTFORMULAR" class="helpbox hidden">
+                        Option for specifying the salt correction formula for the melting temperature calculation. 
+There are three different options available: 
+<br>1. <a href="http://dx.doi.org/10.1002/bip.360030207" rel="noopener noreferrer" target="_blank"> Schildkraut and Lifson 1965, DOI:10.1002/bip.360030207</a>
+(this is used until the version 1.0.1 of Primer3).The default value of
+Primer3 version 1.1.0 (for backward compatibility)
+<br>2. <a href="http://dx.doi.org/10.1073/pnas.95.4.1460" rel="noopener noreferrer" target="_blank">SantaLucia 1998, DOI:10.1073/pnas.95.4.1460</a> 
+This is the <i>recommended</i> value.
+<br>3. <a href="http://dx.doi.org/10.1021/bi034621r" rel="noopener noreferrer" target="_blank">Owczarzy et al. 2004, DOI:10.1021/bi034621r</a>
+
+                    </p>
+                    </div>
+
+                     <label for="TM_METHOD" class="m ">Table of thermodynamic parameters</label>
+                    <div class="input ">
+                    <span class="sel ssf">
+                    <select name="TM_METHOD" id="TM_METHOD" class="opts checkDef" defVal="1">
+                        <option  value="0">Breslauer et al. 1986
+                        </option><option selected="selected"  value="1">SantaLucia 1998</option></select></span>
+                    <a class="helplink" title="help" href="#" id="TMMETHOD"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="TMMETHOD" class="helpbox hidden">
+                       Option for the table of Nearest-Neighbor thermodynamic parameters and for the method of melting temperature calculation. Two different tables of thermodynamic parameters are available:
+<br><a href="http://dx.doi.org/10.1073/pnas.83.11.3746" rel="noopener noreferrer" target="_blank">
+Breslauer et al. 1986, DOI:10.1073/pnas.83.11.3746</a> In
+that case the formula for melting temperature calculation suggested by <a href="https://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pubmed&pubmedid=2243783" rel="noopener noreferrer" target="_blank">Rychlik et al. 1990</a> is used.
+<br><a href="http://dx.doi.org/10.1073/pnas.95.4.1460" rel="noopener noreferrer" target="_blank">SantaLucia 1998, DOI:10.1073/pnas.95.4.1460</a> This is the <i>recommended</i> value.
+
+                    </p>
+                    </div>
+
+
+                    <label for="CON_ANEAL_OLIGO" class="m ">Annealing Oligo Concentration </label>
+                    <div class="input "> 
+                    <input size="6" name="CON_ANEAL_OLIGO" value="" type="text" id="CON_ANEAL_OLIGO" class="opts checkDef" defVal="50.0"/>
+                    <a class="helplink" title="help" href="#" id="CONANEAL_OLIGO"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="CONANEAL_OLIGO" class="helpbox hidden">
+                       The nanomolar concentration of annealing oligos in the PCR. Note that this is not the concentration of oligos in the reaction mix but of those annealing to template.  Primer3 uses this argument to calculate oligo melting temperatures. The default (50nM) works well with the standard protocol used at the Whitehead/MIT Center for Genome Research--0.5 microliters of 20 micromolar concentration for each primer oligo in a 20 microliter reaction with 10 nanograms template, 0.025 units/microliter Taq polymerase in 0.1 mM each dNTP, 1.5mM MgCl2, 50mM KCl, 10mM Tris-HCL (pH 9.3) using 35 cycles with an annealing temperature of 56 degrees Celsius. This parameter corresponds to 'c' in Rychlik, Spencer and Rhoads' equation (ii) (Nucleic Acids Research, vol 18, num 21) where a suitable value (for a lower initial concentration of template) is "empirically determined". The value of this parameter is less than the actual concentration of oligos in the reaction because it is the concentration of annealing oligos, which in turn depends on the amount of template (including PCR product) in a given cycle. This concentration increases a great deal during a PCR; fortunately PCR seems quite robust for a variety of oligo melting temperatures. 
+
+                    </p>
+                    </div>
+                    <label for="NO_SNP" class="m ">SNP handling</label>
+                    <div class="input ">
+                      <input type="checkbox"  name="NO_SNP" class="reset opts checkDef" id="NO_SNP"   defVal="unchecked"/>
+                        <label class="right inlinelabel" for="NO_SNP">Primer binding site may not contain known SNP</label>
+                        <a class="helplink" title="help" href="#" id="nosnpHl"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                        <p toggle="nosnpHl" class="helpbox hidden">
+                          With this option on, the program will automatically retrieve the SNP information contained in template (using GenBank accession or GI as template is required) and avoid choosing primers within the SNP regions.   
+                        </p>
+                        
+                    </div>
+                    
+                    <label for="PRIMER_MISPRIMING_LIBRARY" class="m ">Repeat filter</label>
+                    <div class="input ">     
+                      <span class="sel spm">
+                        <select name="PRIMER_MISPRIMING_LIBRARY" id="PRIMER_MISPRIMING_LIBRARY" class="opts checkDef" defVal="AUTO">
+                          <option  value ="">None</option>
+                          <option  value ="AUTO" selected="selected" >Automatic</option>
+                          <option  value ="repeat/repeat_9606">Human</option>
+                          <option  value ="repeat/repeat_9989">Rodent</option>
+                          <option  value ="repeat/repeat_3702">Arabidopsis</option>
+                          <option  value ="repeat/repeat_7227">Fruit fly</option>
+                          <option  value ="repeat/repeat_4530">Rice</option>
+                          <option  value ="repeat/repeat_40674">Mammals</option>
+                          <option  value ="repeat/repeat_4751">Fungi</option>
+                          <option  value ="repeat/repeat_6239">C. elegans</option>
+                          <option  value ="repeat/repeat_7165">A. gambiae</option>
+                          <option  value ="repeat/repeat_7955">Zebrafish</option>
+                        </select> 
+                      </span>
+                      <a class="helplink hiding" title="help" id="repeatHelp" href="#"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>
+                      <p toggle="repeatHelp" class="helpbox hidden">
+                        If the default "Automatic" setting is selected, the program will automatically select the repeat database using the following rules. 
+                        <br><br>
+                            1.  If a repeat database is available from the same organism as specified in the "Organism" field by user (see above), then that repeat database will be used.  For example, if "Human" is specified, then the human repeat database will be selected.
+                            <br><br>
+                                2.  If a repeat database from the same organism is not available, the database from the closest parent of that organism in the taxonomy tree will be selected.  For example, the rodent repeat database will be selected if "Mouse" is specified in "Organism" field.  However, no repeat database will be selected if "Gallus gallus" is specified since a repeat database from its taxonomical parents is not available.
+                                
+                                
+                      </p>      
+                      <br/>
+                        <span class="help">Avoid repeat region for primer selection by filtering with repeat database</span>
+                        
+                    </div>
+                    
+                    <label for="LOW_COMPLEXITY_FILTER" class="m ">Low complexity filter</label>
+                    <div class="input">
+                      <input type="checkbox"   checked="checked" name="LOW_COMPLEXITY_FILTER" class="reset opts checkDef" id="LOW_COMPLEXITY_FILTER"  defVal="checked" />
+         <label class="right inlinelabel" for="LOW_COMPLEXITY_FILTER">Avoid low complexity region for primer selection</label>
+                        <a class="helplink" title="help" href="#" id="LOWCOMPLEXITYFILTER"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>            
+                    <p toggle="LOWCOMPLEXITYFILTER" class="helpbox hidden">
+                         Low complexity regions are some regions in a DNA sequence that have biased base compositions such as a stretch of ACACACACACACACACACA.
+                    </p>
+               
+                    </div>
+                    
+                    
+      </fieldset>
+      
+      <fieldset class=" section">
+         <legend>Internal hybridization oligo parameters</legend>
+        
+         <label class="m ">Hybridization oligo</label>   
+
+         <div class="input ">         
+              <input type="checkbox"    name="PICK_HYB_PROBE" id="PICK_HYB_PROBE" class="reset checkDef opts" defVal="unchecked"/>                  
+              <label class="right inlinelabel" for="PICK_HYB_PROBE">Pick internal hybridization oligo </label>
+                                      
+         </div>
+         
+         <label class="m  r">Hyb Oligo Size</label>
+         <div class="input ">               
+             <div class="">                
+                <label for="PRIMER_INTERNAL_OLIGO_MIN_SIZE">Min</label>
+                <label for="PRIMER_INTERNAL_OLIGO_OPT_SIZE" class="lbLm">Opt</label>
+                <label for="PRIMER_INTERNAL_OLIGO_MAX_SIZE" class="lbLm">Max</label>
+             </div>                          
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_MIN_SIZE" value="" type="text" id="PRIMER_INTERNAL_OLIGO_MIN_SIZE" class="opts checkDef" defVal="18"/>
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_OPT_SIZE" value="" type="text" id="PRIMER_INTERNAL_OLIGO_OPT_SIZE" class="rs opts checkDef" defVal="20" />
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_MAX_SIZE" value="" type="text" id="PRIMER_INTERNAL_OLIGO_MAX_SIZE" class="rs opts checkDef" defVal="27" />             
+            
+         </div>
+
+         <label for="PRIMER_INTERNAL_OLIGO_MIN_TM" class="m  r">Hyb Oligo tm</label>
+         <div class="input ">               
+             <div class="">                
+                <label for="PRIMER_INTERNAL_OLIGO_MIN_TM">Min</label>
+                <label for="PRIMER_INTERNAL_OLIGO_OPT_TM" class="lbLm">Opt</label>
+                <label for="PRIMER_INTERNAL_OLIGO_MAX_TM" class="lbLm">Max</label>
+             </div>                          
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_MIN_TM" value="" type="text" id="PRIMER_INTERNAL_OLIGO_MIN_TM" class="opts checkDef" defVal="57.0" />
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_OPT_TM" value="" type="text" id="PRIMER_INTERNAL_OLIGO_OPT_TM" class="rs opts checkDef" defVal="60.0" />
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_MAX_TM" value="" type="text" id="PRIMER_INTERNAL_OLIGO_MAX_TM" class="rs opts checkDef" defVal="63.0" />             
+           
+         </div>         
+         
+         <label for="PRIMER_INTERNAL_OLIGO_MIN_GC" class="m  r">Hyb Oligo GC%</label>
+         <div class="input ">               
+             <div class="">                
+                <label for="PRIMER_INTERNAL_OLIGO_MIN_GC">Min</label>
+                <label for="PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT" class="lbLm">Opt</label>
+                <label for="PRIMER_INTERNAL_OLIGO_MAX_GC" class="lbLm">Max</label>
+             </div>                          
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_MIN_GC" value="" type="text" id="PRIMER_INTERNAL_OLIGO_MIN_GC" class="checkDef" defVal="20.0"/>
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT" value="" type="text" id="PRIMER_INTERNAL_OLIGO_OPT_GC_PERCENT" class="rs opts checkDef" defVal="50" />
+             <input size="4" name="PRIMER_INTERNAL_OLIGO_MAX_GC" value="" type="text" id="PRIMER_INTERNAL_OLIGO_MAX_GC" class="rs opts checkDef" defVal="80.0" />
+             
+             
+         </div>         
+      </fieldset>
+      
+      
+   <div class="searchInfo " id="srchBottom">
+      <div class="summary">
+         <input type="button" value="Get Primers" class="blastbutton prbutton" />                    
+      </div> 
+      <div class="searchsummary">
+         <div class="openNewWin ">            
+            <input class="newwin checkDef" type="checkbox" name="NEWWIN"  id="nw2" form="searchForm" winType="random" defVal="unchecked" />
+            <label class="inlineLabel " for="nw2">Show results in a new window</label>
+            <input class="newwin checkDef" type="checkbox" name="SHOW_SVIEWER" CHECKED id="show_sviewer2" form="searchForm" winType="random" defVal="checked" />
+            <label class="inlineLabel " for="show_sviewer2">Use new graphic view</label>
+            <a class="helplink" title="help" href="#" id="SHOW_SVIEWER_HELP2"><i class="fas fa-question-circle"></i> <span class="usa-sr-only">Help</span></a>   
+            <p toggle="SHOW_SVIEWER_HELP2" class="helpbox hidden">
+                This option enables our new graphic view which offers much more details for your template and primers.  It will replace the current graphic view in the future.
+            </p>
+         </div>
+      </div>        
+   </div> 
+
+      </div><!-- /#moreopts -->
+
+</div><!--/#sopts--> 
+</div>                 
+<input name="LINK_LOC" id="LINK_LOC" type="hidden" value="" />
+<input id="show_sviewer_input" type="hidden" value="" />
+<input name="SVIEWER_DATA_KEY" id="SVIEWER_DATA_KEY" type="hidden" value="" />
+<input name="CMD" id="cmd" type="hidden" value="request" />
+<!-- the field that will keep the number of differemces from default params the first for all -->
+<input name="NUM_DIFFS" type="hidden" value="0" id="NUM_DIFFS"/> 
+<!-- the second only for options -->
+<input name="NUM_OPTS_DIFFS" type="hidden" value="0" id="NUM_OPTS_DIFFS"/> 
+<input type="hidden" value="" id="primerBlastSpec"/> 
+</form>
+</div><!--/#content-->
+ <footer>
+      <section class="icon-section">
+        <div id="icon-section-header" class="icon-section_header">Follow NCBI</div>
+        <div class="grid-container container">
+          <div class="icon-section_container">
+            <a class="footer-icon" id="footer_twitter" href="https://twitter.com/ncbi" aria-label="Twitter"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+                <defs>
+                  <style>
+                    .cls-11 {
+                      fill: #737373;
+                    }
+                  </style>
+                </defs>
+                <title>Twitter</title>
+                <path class="cls-11" d="M250.11,105.48c-7,3.14-13,3.25-19.27.14,8.12-4.86,8.49-8.27,11.43-17.46a78.8,78.8,0,0,1-25,9.55,39.35,39.35,0,0,0-67,35.85,111.6,111.6,0,0,1-81-41.08A39.37,39.37,0,0,0,81.47,145a39.08,39.08,0,0,1-17.8-4.92c0,.17,0,.33,0,.5a39.32,39.32,0,0,0,31.53,38.54,39.26,39.26,0,0,1-17.75.68,39.37,39.37,0,0,0,36.72,27.3A79.07,79.07,0,0,1,56,223.34,111.31,111.31,0,0,0,116.22,241c72.3,0,111.83-59.9,111.83-111.84,0-1.71,0-3.4-.1-5.09C235.62,118.54,244.84,113.37,250.11,105.48Z">
+                </path>
+              </svg></a>
+            <a class="footer-icon" id="footer_facebook" href="https://www.facebook.com/ncbi.nlm" aria-label="Facebook"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+                <title>Facebook</title>
+                <path class="cls-11" d="M210.5,115.12H171.74V97.82c0-8.14,5.39-10,9.19-10h27.14V52l-39.32-.12c-35.66,0-42.42,26.68-42.42,43.77v19.48H99.09v36.32h27.24v109h45.41v-109h35Z">
+                </path>
+              </svg></a>
+            <a class="footer-icon" id="footer_linkedin" href="https://www.linkedin.com/company/ncbinlm" aria-label="LinkedIn"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+                <title>LinkedIn</title>
+                <path class="cls-11" d="M101.64,243.37H57.79v-114h43.85Zm-22-131.54h-.26c-13.25,0-21.82-10.36-21.82-21.76,0-11.65,8.84-21.15,22.33-21.15S101.7,78.72,102,90.38C102,101.77,93.4,111.83,79.63,111.83Zm100.93,52.61A17.54,17.54,0,0,0,163,182v61.39H119.18s.51-105.23,0-114H163v13a54.33,54.33,0,0,1,34.54-12.66c26,0,44.39,18.8,44.39,55.29v58.35H198.1V182A17.54,17.54,0,0,0,180.56,164.44Z">
+                </path>
+              </svg></a>
+            <a class="footer-icon" id="footer_github" href="https://github.com/ncbi" aria-label="GitHub"><svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+                <defs>
+                  <style>
+                    .cls-11,
+                    .cls-12 {
+                      fill: #737373;
+                    }
+
+                    .cls-11 {
+                      fill-rule: evenodd;
+                    }
+                  </style>
+                </defs>
+                <title>GitHub</title>
+                <path class="cls-11" d="M151.36,47.28a105.76,105.76,0,0,0-33.43,206.1c5.28,1,7.22-2.3,7.22-5.09,0-2.52-.09-10.85-.14-19.69-29.42,6.4-35.63-12.48-35.63-12.48-4.81-12.22-11.74-15.47-11.74-15.47-9.59-6.56.73-6.43.73-6.43,10.61.75,16.21,10.9,16.21,10.9,9.43,16.17,24.73,11.49,30.77,8.79,1-6.83,3.69-11.5,6.71-14.14C108.57,197.1,83.88,188,83.88,147.51a40.92,40.92,0,0,1,10.9-28.39c-1.1-2.66-4.72-13.42,1-28,0,0,8.88-2.84,29.09,10.84a100.26,100.26,0,0,1,53,0C198,88.3,206.9,91.14,206.9,91.14c5.76,14.56,2.14,25.32,1,28a40.87,40.87,0,0,1,10.89,28.39c0,40.62-24.74,49.56-48.29,52.18,3.79,3.28,7.17,9.71,7.17,19.58,0,14.15-.12,25.54-.12,29,0,2.82,1.9,6.11,7.26,5.07A105.76,105.76,0,0,0,151.36,47.28Z">
+                </path>
+                <path class="cls-12" d="M85.66,199.12c-.23.52-1.06.68-1.81.32s-1.2-1.06-.95-1.59,1.06-.69,1.82-.33,1.21,1.07.94,1.6Zm-1.3-1">
+                </path>
+                <path class="cls-12" d="M90,203.89c-.51.47-1.49.25-2.16-.49a1.61,1.61,0,0,1-.31-2.19c.52-.47,1.47-.25,2.17.49s.82,1.72.3,2.19Zm-1-1.08">
+                </path>
+                <path class="cls-12" d="M94.12,210c-.65.46-1.71,0-2.37-.91s-.64-2.07,0-2.52,1.7,0,2.36.89.65,2.08,0,2.54Zm0,0"></path>
+                <path class="cls-12" d="M99.83,215.87c-.58.64-1.82.47-2.72-.41s-1.18-2.06-.6-2.7,1.83-.46,2.74.41,1.2,2.07.58,2.7Zm0,0">
+                </path>
+                <path class="cls-12" d="M107.71,219.29c-.26.82-1.45,1.2-2.64.85s-2-1.34-1.74-2.17,1.44-1.23,2.65-.85,2,1.32,1.73,2.17Zm0,0">
+                </path>
+                <path class="cls-12" d="M116.36,219.92c0,.87-1,1.59-2.24,1.61s-2.29-.68-2.3-1.54,1-1.59,2.26-1.61,2.28.67,2.28,1.54Zm0,0">
+                </path>
+                <path class="cls-12" d="M124.42,218.55c.15.85-.73,1.72-2,1.95s-2.37-.3-2.52-1.14.73-1.75,2-2,2.37.29,2.53,1.16Zm0,0"></path>
+              </svg></a>
+            <a class="footer-icon" id="footer_blog" href="https://ncbiinsights.ncbi.nlm.nih.gov/" aria-label="Blog">
+              <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><style>.cls-1{fill:#737373;}</style></defs><path class="cls-1" d="M14,30a4,4,0,1,1-4-4,4,4,0,0,1,4,4Zm11,3A19,19,0,0,0,7.05,15a1,1,0,0,0-1,1v3a1,1,0,0,0,.93,1A14,14,0,0,1,20,33.07,1,1,0,0,0,21,34h3a1,1,0,0,0,1-1Zm9,0A28,28,0,0,0,7,6,1,1,0,0,0,6,7v3a1,1,0,0,0,1,1A23,23,0,0,1,29,33a1,1,0,0,0,1,1h3A1,1,0,0,0,34,33Z"></path></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="container-fluid bg-primary">
+        <div class="container pt-5">
+          <div class="row mt-3">
+            <div class="col-lg-3 col-12">
+              <p><a class="text-white" href="https://www.nlm.nih.gov/socialmedia/index.html">Connect with NLM</a></p>
+              <ul class="list-inline social_media">
+                <li class="list-inline-item"><a href="https://twitter.com/NLM_NIH" aria-label="Twitter" target="_blank" rel="noopener noreferrer"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 249 249" style="enable-background:new 0 0 249 249;" xml:space="preserve">
+                      <style type="text/css">
+                        .st20 {
+                          fill: #FFFFFF;
+                        }
+
+                        .st30 {
+                          fill: none;
+                          stroke: #FFFFFF;
+                          stroke-width: 8;
+                          stroke-miterlimit: 10;
+                        }
+                      </style>
+                      <title>SM-Twitter</title>
+                      <g>
+                        <g>
+                          <g>
+                            <path class="st20" d="M192.9,88.1c-5,2.2-9.2,2.3-13.6,0.1c5.7-3.4,6-5.8,8.1-12.3c-5.4,3.2-11.4,5.5-17.6,6.7
+                                                c-10.5-11.2-28.1-11.7-39.2-1.2c-7.2,6.8-10.2,16.9-8,26.5c-22.3-1.1-43.1-11.7-57.2-29C58,91.6,61.8,107.9,74,116
+                                                c-4.4-0.1-8.7-1.3-12.6-3.4c0,0.1,0,0.2,0,0.4c0,13.2,9.3,24.6,22.3,27.2c-4.1,1.1-8.4,1.3-12.5,0.5c3.6,11.3,14,19,25.9,19.3
+                                                c-11.6,9.1-26.4,13.2-41.1,11.5c12.7,8.1,27.4,12.5,42.5,12.5c51,0,78.9-42.2,78.9-78.9c0-1.2,0-2.4-0.1-3.6
+                                                C182.7,97.4,189.2,93.7,192.9,88.1z"></path>
+                          </g>
+                        </g>
+                        <circle class="st30" cx="124.4" cy="128.8" r="108.2"></circle>
+                      </g>
+                    </svg></a></li>
+                <li class="list-inline-item"><a href="https://www.facebook.com/nationallibraryofmedicine" aria-label="Facebook" rel="noopener noreferrer" target="_blank">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 249 249" style="enable-background:new 0 0 249 249;" xml:space="preserve">
+                      <style type="text/css">
+                        .st10 {
+                          fill: #FFFFFF;
+                        }
+
+                        .st110 {
+                          fill: none;
+                          stroke: #FFFFFF;
+                          stroke-width: 8;
+                          stroke-miterlimit: 10;
+                        }
+                      </style>
+                      <title>SM-Facebook</title>
+                      <g>
+                        <g>
+                          <path class="st10" d="M159,99.1h-24V88.4c0-5,3.3-6.2,5.7-6.2h16.8V60l-24.4-0.1c-22.1,0-26.2,16.5-26.2,27.1v12.1H90v22.5h16.9
+                                                      v67.5H135v-67.5h21.7L159,99.1z"></path>
+                        </g>
+                      </g>
+                      <circle class="st110" cx="123.6" cy="123.2" r="108.2"></circle>
+                    </svg>
+                  </a></li>
+                <li class="list-inline-item"><a href="https://www.youtube.com/user/NLMNIH" aria-label="Youtube" target="_blank" rel="noopener noreferrer"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 249 249" style="enable-background:new 0 0 249 249;" xml:space="preserve">
+                      <title>SM-Youtube</title>
+                      <style type="text/css">
+                        .st4 {
+                          fill: none;
+                          stroke: #FFFFFF;
+                          stroke-width: 8;
+                          stroke-miterlimit: 10;
+                        }
+
+                        .st5 {
+                          fill: #FFFFFF;
+                        }
+                      </style>
+                      <circle class="st4" cx="124.2" cy="123.4" r="108.2"></circle>
+                      <g transform="translate(0,-952.36218)">
+                        <path class="st5" d="M88.4,1037.4c-10.4,0-18.7,8.3-18.7,18.7v40.1c0,10.4,8.3,18.7,18.7,18.7h72.1c10.4,0,18.7-8.3,18.7-18.7
+                                            v-40.1c0-10.4-8.3-18.7-18.7-18.7H88.4z M115.2,1058.8l29.4,17.4l-29.4,17.4V1058.8z"></path>
+                      </g>
+                    </svg></a></li>
+              </ul>
+            </div>
+            <div class="col-lg-3 col-12">
+              <p class="address_footer text-white">National Library of Medicine<br>
+                <a href="https://www.google.com/maps/place/8600+Rockville+Pike,+Bethesda,+MD+20894/@38.9959508,-77.101021,17z/data=!3m1!4b1!4m5!3m4!1s0x89b7c95e25765ddb:0x19156f88b27635b8!8m2!3d38.9959508!4d-77.0988323" class="text-white" target="_blank" rel="noopener noreferrer">8600 Rockville Pike<br>
+                  Bethesda, MD 20894</a></p>
+            </div>
+            <div class="col-lg-3 col-12 centered-lg">
+              <p><a href="https://www.nlm.nih.gov/web_policies.html" class="text-white">Web Policies</a><br>
+                <a href="https://www.nih.gov/institutes-nih/nih-office-director/office-communications-public-liaison/freedom-information-act-office" class="text-white">FOIA</a><br>
+                <a href="https://www.hhs.gov/vulnerability-disclosure-policy/index.html" class="text-white" id="vdp">HHS Vulnerability Disclosure</a></p>
+            </div>
+            <div class="col-lg-3 col-12 centered-lg">
+              <p><a class="supportLink text-white" href="https://support.nlm.nih.gov/">Help</a><br>
+                <a href="https://www.nlm.nih.gov/accessibility.html" class="text-white">Accessibility</a><br>
+                <a href="https://www.nlm.nih.gov/careers/careers.html" class="text-white">Careers</a></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12 centered-lg">
+              <nav class="bottom-links">
+                <ul class="mt-3">
+                  <li>
+                    <a class="text-white" href="//www.nlm.nih.gov/">NLM</a>
+                  </li>
+                  <li>
+                    <a class="text-white" href="https://www.nih.gov/">NIH</a>
+                  </li>
+                  <li>
+                    <a class="text-white" href="https://www.hhs.gov/">HHS</a>
+                  </li>
+                  <li>
+                    <a class="text-white" href="https://www.usa.gov/">USA.gov</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </section>
+    </footer>
+<script type="text/javascript" src="js/nwds.js"></script>
+<script type="text/javascript" src="js/ncbipopup.js"></script>
+<script type="text/javascript" src="js/header.js"></script>
+<script src="js/uswds.min.js"></script>
+</div><!--/#content-wrap-->
+</div><!--/#wrap-->
+<script type="text/javascript" src="/portal/portal3rc.fcgi/rlib/js/InstrumentOmnitureBaseJS/InstrumentNCBIBaseJS/InstrumentPageStarterJS.js"></script>
+</body>
+</html>

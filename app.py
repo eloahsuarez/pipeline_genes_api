@@ -9,14 +9,17 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, ttk, simpledialog
 from tkinter.scrolledtext import ScrolledText
 
 from bioinformatics import (
     PrimerDesignParams,
+    build_consensus_and_mask,
     find_conserved_regions,
     generate_exon_junction_primer_pairs,
     generate_primer_pairs,
+    generate_primer_pairs_for_sequence,
+    pairwise_align_fasta,
     records_to_fasta,
 )
 from ebi_client import ClustalParams, EbiClustalClient
@@ -29,8 +32,22 @@ from exporter import (
 )
 from idt_client import IdtClient, IdtConditions, IdtCredentials
 from local_storage import LocalStateStore
-from models import ConservedRegion, PrimerPair, SequenceRecord
+from models import ConservedRegion, ExonInterval, PrimerPair, SequenceRecord, PrimerCandidate
+from ncbi_blast import (
+    NcbiBlastClient,
+    NcbiBlastError,
+    NcbiBlastParams,
+    REFSEQ_MRNA_DATABASE,
+    REFSEQ_SELECT_DATABASE,
+    primer_pairs_to_fasta,
+)
 from ncbi_client import NcbiClient, NcbiSearchParams
+from primer_plot import (
+    build_primer_map_layout,
+    nice_tick_positions,
+    sequence_position_to_pixel,
+    sequence_span_to_pixels,
+)
 from version import APP_VERSION
 
 
@@ -45,6 +62,68 @@ CREDENTIAL_VARIABLES = {
     "idt_password",
 }
 SENSITIVE_CONFIG_VARIABLES = {"ncbi_api_key", "idt_client_secret", "idt_password"}
+NCBI_SPECIFICITY_DATABASE_LABELS = {
+    REFSEQ_MRNA_DATABASE: "RefSeq mRNA (refseq_mrna)",
+    REFSEQ_SELECT_DATABASE: "RefSeq Select RNA (refseq_select_rna)",
+}
+NCBI_SPECIFICITY_DATABASES_BY_LABEL = {
+    label: database for database, label in NCBI_SPECIFICITY_DATABASE_LABELS.items()
+}
+DEFAULT_NCBI_SPECIFICITY_DATABASE = REFSEQ_MRNA_DATABASE
+DEFAULT_NCBI_SPECIFICITY_TOP_PAIRS = 1
+DEFAULT_NCBI_SPECIFICITY_HITLIST_SIZE = 50_000
+DEFAULT_NCBI_SPECIFICITY_MAX_AMPLICON = 4_000
+DEFAULT_NCBI_SPECIFICITY_MAX_ESTIMATED_MISMATCHES = 6
+NCBI_SPECIFICITY_THREE_PRIME_WINDOW = 5
+NCBI_SPECIFICITY_WORD_SIZE = 7
+NCBI_SPECIFICITY_TREE_PRODUCT_LIMIT = 1_000
+
+
+def ncbi_specificity_database_label(database: str) -> str:
+    """Retorna um nome legível sem esconder o alias enviado ao NCBI."""
+
+    return NCBI_SPECIFICITY_DATABASE_LABELS.get(database, database)
+
+
+def migrate_ncbi_specificity_profile_settings(settings: dict) -> dict:
+    """Migra limites do perfil remoto anterior sem sobrescrever o perfil novo."""
+
+    migrated = dict(settings)
+    marker = "ncbi_specificity_max_estimated_mismatches"
+    if marker not in migrated:
+        migrated.update(
+            {
+                "ncbi_specificity_top_n": DEFAULT_NCBI_SPECIFICITY_TOP_PAIRS,
+                "ncbi_specificity_max_hits": DEFAULT_NCBI_SPECIFICITY_HITLIST_SIZE,
+                "ncbi_specificity_max_amplicon": DEFAULT_NCBI_SPECIFICITY_MAX_AMPLICON,
+                marker: DEFAULT_NCBI_SPECIFICITY_MAX_ESTIMATED_MISMATCHES,
+            }
+        )
+    return migrated
+
+
+def alignment_strategy(records: list[SequenceRecord]) -> str:
+    """Escolhe o alinhador sem submeter pares ao Clustal Omega múltiplo."""
+    count = sum(record.selected for record in records)
+    if count < 2:
+        raise ValueError("Selecione pelo menos duas sequências para alinhar.")
+    return "pairwise" if count == 2 else "clustal"
+
+
+def primer_design_source(
+    alignment: str, records: list[SequenceRecord]
+) -> tuple[str, str, SequenceRecord | None]:
+    """Resolve a entrada do desenho: alinhamento existente ou sequência única."""
+    if alignment:
+        return "alignment", alignment, None
+    selected = [record for record in records if record.selected]
+    if not selected:
+        raise ValueError("Selecione uma sequência antes de desenhar os primers.")
+    if len(selected) > 1:
+        raise ValueError(
+            "Alinhe as sequências selecionadas ou deixe apenas uma marcada para o desenho direto."
+        )
+    return "single", selected[0].sequence, selected[0]
 
 
 def restart_application(app_path: Path | None = None) -> None:
@@ -72,6 +151,10 @@ class GenePipelineApp(tk.Tk):
         self.clustal_result_type = ""
         self.regions: list[ConservedRegion] = []
         self.pairs: list[PrimerPair] = []
+        self.primer_map_target_length = 0
+        self.primer_map_target_label = ""
+        self.primer_map_exons: list[ExonInterval] = []
+        self._primer_map_redraw_after_id: str | None = None
         self.worker_queue: queue.Queue[tuple[str, object]] = queue.Queue()
         self.busy = False
         self.local_state_store = LocalStateStore()
@@ -128,17 +211,22 @@ class GenePipelineApp(tk.Tk):
         self.tab_sequences = ttk.Frame(self.notebook, padding=10)
         self.tab_clustal = ttk.Frame(self.notebook, padding=10)
         self.tab_design = ttk.Frame(self.notebook, padding=10)
+        self.tab_results = ttk.Frame(self.notebook, padding=10)
+        self.tab_specificity = ttk.Frame(self.notebook, padding=10)
         self.tab_idt = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(self.tab_ncbi, text="1. NCBI")
         self.notebook.add(self.tab_sequences, text="2. Sequências")
-        self.notebook.add(self.tab_clustal, text="3. Clustal Omega")
+        self.notebook.add(self.tab_clustal, text="3. Alinhamento")
         self.notebook.add(self.tab_design, text="4. Conservação e primers")
-        self.notebook.add(self.tab_idt, text="5. IDT")
+        self.notebook.add(self.tab_results, text="5. Resultados")
+        self.notebook.add(self.tab_idt, text="6. IDT")
+        self.notebook.add(self.tab_specificity, text="7. Especificidade")
 
         self._build_ncbi_tab()
         self._build_sequences_tab()
         self._build_clustal_tab()
         self._build_design_tab()
+        self._build_specificity_tab()
         self._build_idt_tab()
 
         bottom = ttk.Frame(root)
@@ -171,6 +259,62 @@ class GenePipelineApp(tk.Tk):
         entry = ttk.Entry(parent, textvariable=variable, width=width, show=show)
         entry.grid(row=row, column=column + 1, sticky="ew", padx=4, pady=3)
         return entry
+
+    def _scrollable_content(self, parent: ttk.Frame) -> tuple[ttk.Frame, tk.Canvas]:
+        """Cria uma página rolável sem comprimir os controles internos."""
+        background = ttk.Style().lookup("TFrame", "background") or "#f0f0f0"
+        canvas = tk.Canvas(
+            parent,
+            background=background,
+            borderwidth=0,
+            highlightthickness=0,
+        )
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        content = ttk.Frame(canvas, padding=8)
+        window = canvas.create_window((0, 0), window=content, anchor="nw")
+
+        def update_scrollregion(_event=None) -> None:
+            bounds = canvas.bbox(window)
+            if bounds is not None:
+                canvas.configure(scrollregion=bounds)
+
+        def fit_width(event) -> None:
+            canvas.itemconfigure(window, width=event.width)
+            canvas.after_idle(update_scrollregion)
+
+        def scroll(event):
+            if not canvas.winfo_ismapped():
+                return None
+            left = canvas.winfo_rootx()
+            top = canvas.winfo_rooty()
+            if not (
+                left <= event.x_root < left + canvas.winfo_width()
+                and top <= event.y_root < top + canvas.winfo_height()
+            ):
+                return None
+            if getattr(event, "num", None) == 4:
+                units = -1
+            elif getattr(event, "num", None) == 5:
+                units = 1
+            elif getattr(event, "delta", 0):
+                units = -1 if event.delta > 0 else 1
+                if abs(event.delta) >= 120:
+                    units *= max(1, abs(int(event.delta / 120)))
+            else:
+                return None
+            canvas.yview_scroll(units, "units")
+            return "break"
+
+        content.bind("<Configure>", update_scrollregion)
+        canvas.bind("<Configure>", fit_width)
+        self.bind("<MouseWheel>", scroll, add="+")
+        self.bind("<Button-4>", scroll, add="+")
+        self.bind("<Button-5>", scroll, add="+")
+        return content, canvas
 
     def _build_ncbi_tab(self) -> None:
         frame = self.tab_ncbi
@@ -212,6 +356,11 @@ class GenePipelineApp(tk.Tk):
         ttk.Button(top, text="Selecionar todas", command=lambda: self._set_all_records(True)).pack(side="left", padx=3)
         ttk.Button(top, text="Desmarcar todas", command=lambda: self._set_all_records(False)).pack(side="left", padx=3)
         ttk.Button(top, text="Exportar FASTA…", command=self.export_selected_fasta).pack(side="left", padx=3)
+        ttk.Button(
+            top,
+            text="Desenhar com 1 sequência",
+            command=self.open_single_sequence_design,
+        ).pack(side="left", padx=3)
         ttk.Label(top, text="Dê duplo clique em uma linha para alternar Usar = Sim/Não.").pack(side="right")
 
         columns = ("use", "accession", "organism", "length", "genes", "definition")
@@ -234,12 +383,20 @@ class GenePipelineApp(tk.Tk):
         self._entry(frame, 4, "Tempo máximo (min)", self._var("timeout_minutes", 20, "int"), column=0)
         ttk.Checkbutton(frame, text="Remover gaps prévios (dealign)", variable=self._var("dealign", False, "bool")).grid(row=5, column=0, columnspan=2, sticky="w", padx=4, pady=3)
         ttk.Checkbutton(frame, text="Usar mBed", variable=self._var("mbed", True, "bool")).grid(row=6, column=0, columnspan=2, sticky="w", padx=4, pady=3)
-        ttk.Button(frame, text="Alinhar sequências selecionadas", command=self.run_clustal).grid(row=7, column=0, columnspan=2, pady=12)
+        ttk.Label(
+            frame,
+            text=(
+                "Duas sequências usam alinhamento global pareado local; três ou mais "
+                "são enviadas ao Clustal Omega do EMBL-EBI."
+            ),
+            wraplength=900,
+        ).grid(row=7, column=0, columnspan=2, sticky="w", padx=4, pady=(6, 0))
+        ttk.Button(frame, text="Alinhar sequências selecionadas", command=self.run_clustal).grid(row=8, column=0, columnspan=2, pady=10)
         self.clustal_info = tk.StringVar(value="Nenhum alinhamento executado.")
-        ttk.Label(frame, textvariable=self.clustal_info, wraplength=900).grid(row=8, column=0, columnspan=2, sticky="w", padx=4, pady=8)
+        ttk.Label(frame, textvariable=self.clustal_info, wraplength=900).grid(row=9, column=0, columnspan=2, sticky="w", padx=4, pady=8)
         self.alignment_preview = ScrolledText(frame, height=18, wrap="none")
-        self.alignment_preview.grid(row=9, column=0, columnspan=2, sticky="nsew", padx=4, pady=4)
-        frame.rowconfigure(9, weight=1)
+        self.alignment_preview.grid(row=10, column=0, columnspan=2, sticky="nsew", padx=4, pady=4)
+        frame.rowconfigure(10, weight=1)
 
     def _build_design_tab(self) -> None:
         outer = self.tab_design
@@ -309,26 +466,48 @@ class GenePipelineApp(tk.Tk):
         actions.pack(fill="x", pady=8)
         ttk.Button(actions, text="Encontrar regiões conservadas", command=self.analyze_conservation).pack(side="left", padx=4)
         ttk.Button(actions, text="Gerar pares de primers", command=self.generate_primers).pack(side="left", padx=4)
+        ttk.Label(
+            actions,
+            text="Com uma única sequência selecionada, os primers podem ser gerados sem Clustal.",
+        ).pack(side="left", padx=12)
 
-        panes = ttk.Panedwindow(outer, orient="vertical")
-        panes.pack(fill="both", expand=True)
-        region_frame = ttk.LabelFrame(panes, text="Regiões conservadas")
-        pair_frame = ttk.LabelFrame(panes, text="Pares candidatos")
-        panes.add(region_frame, weight=1)
-        panes.add(pair_frame, weight=2)
+        result_outer = self.tab_results
+        self.results_notebook = ttk.Notebook(result_outer)
+        self.results_notebook.pack(fill="both", expand=True)
+        region_frame = ttk.Frame(self.results_notebook, padding=4)
+        pair_frame = ttk.Frame(self.results_notebook, padding=4)
+        map_frame = ttk.Frame(self.results_notebook, padding=4)
+        self.region_results_tab = region_frame
+        self.pair_results_tab = pair_frame
+        self.primer_map_tab = map_frame
+        self.results_notebook.add(region_frame, text="Regiões conservadas")
+        self.results_notebook.add(pair_frame, text="Pares candidatos")
+        self.results_notebook.add(map_frame, text="Mapa dos primers")
 
-        rcols = ("start", "end", "length", "identity", "coverage", "sequence")
-        self.region_tree = ttk.Treeview(region_frame, columns=rcols, show="headings")
+        rcols = ("accession", "start", "end", "length", "identity", "coverage", "sequence")
+        region_table = ttk.Frame(region_frame)
+        region_table.pack(fill="x", expand=False)
+        self.region_tree = ttk.Treeview(
+            region_table, columns=rcols, show="headings", height=4
+        )
         for col, text, width in [
-            ("start", "Início", 80), ("end", "Fim", 80), ("length", "bp", 70),
+            ("accession", "Acesso Alvo", 140), ("start", "Início", 80), ("end", "Fim", 80), ("length", "bp", 70),
             ("identity", "Identidade", 90), ("coverage", "Cobertura", 90), ("sequence", "Sequência", 650),
         ]:
             self.region_tree.heading(col, text=text)
             self.region_tree.column(col, width=width, anchor="w")
-        self.region_tree.pack(fill="both", expand=True)
+        region_scroll_x = ttk.Scrollbar(
+            region_table, orient="horizontal", command=self.region_tree.xview
+        )
+        self.region_tree.configure(xscrollcommand=region_scroll_x.set)
+        self.region_tree.grid(row=0, column=0, sticky="nsew")
+        region_scroll_x.grid(row=1, column=0, sticky="ew")
+        region_table.columnconfigure(0, weight=1)
 
         pcols = ("rank", "score", "amp", "junction", "fwd", "ftm", "fgc", "rev", "rtm", "rgc")
-        self.pair_tree = ttk.Treeview(pair_frame, columns=pcols, show="headings")
+        pair_table = ttk.Frame(pair_frame)
+        pair_table.pack(fill="both", expand=True)
+        self.pair_tree = ttk.Treeview(pair_table, columns=pcols, show="headings")
         for col, text, width in [
             ("rank", "Rank", 55), ("score", "Score", 70), ("amp", "Amplicon", 80),
             ("junction", "Junção", 180),
@@ -337,7 +516,156 @@ class GenePipelineApp(tk.Tk):
         ]:
             self.pair_tree.heading(col, text=text)
             self.pair_tree.column(col, width=width, anchor="w")
-        self.pair_tree.pack(fill="both", expand=True)
+        pair_scroll_y = ttk.Scrollbar(
+            pair_table, orient="vertical", command=self.pair_tree.yview
+        )
+        pair_scroll_x = ttk.Scrollbar(
+            pair_table, orient="horizontal", command=self.pair_tree.xview
+        )
+        self.pair_tree.configure(
+            yscrollcommand=pair_scroll_y.set,
+            xscrollcommand=pair_scroll_x.set,
+        )
+        self.pair_tree.grid(row=0, column=0, sticky="nsew")
+        pair_scroll_y.grid(row=0, column=1, sticky="ns")
+        pair_scroll_x.grid(row=1, column=0, sticky="ew")
+        pair_table.columnconfigure(0, weight=1)
+        pair_table.rowconfigure(0, weight=1)
+
+        map_header = ttk.Frame(map_frame)
+        map_header.pack(fill="x", padx=4, pady=(2, 6))
+        self.primer_map_summary = tk.StringVar(
+            value="Gere os pares de primers para visualizar sua localização."
+        )
+        ttk.Label(
+            map_header,
+            textvariable=self.primer_map_summary,
+            font=("TkDefaultFont", 10, "bold"),
+        ).pack(side="left")
+        ttk.Label(
+            map_header,
+            text="Forward 5′→3′  →",
+            foreground="#1565C0",
+        ).pack(side="right", padx=(12, 0))
+        ttk.Label(
+            map_header,
+            text="←  Reverse 5′→3′",
+            foreground="#C2185B",
+        ).pack(side="right", padx=(12, 0))
+
+        map_canvas_frame = ttk.Frame(map_frame)
+        map_canvas_frame.pack(fill="both", expand=True)
+        self.primer_map_canvas = tk.Canvas(
+            map_canvas_frame,
+            background="white",
+            borderwidth=0,
+            highlightthickness=1,
+            highlightbackground="#CFD8DC",
+        )
+        primer_map_scroll_y = ttk.Scrollbar(
+            map_canvas_frame,
+            orient="vertical",
+            command=self.primer_map_canvas.yview,
+        )
+        self.primer_map_canvas.configure(yscrollcommand=primer_map_scroll_y.set)
+        self.primer_map_canvas.grid(row=0, column=0, sticky="nsew")
+        primer_map_scroll_y.grid(row=0, column=1, sticky="ns")
+        map_canvas_frame.columnconfigure(0, weight=1)
+        map_canvas_frame.rowconfigure(0, weight=1)
+        self.primer_map_canvas.bind("<Configure>", self._schedule_primer_map_redraw)
+        self.primer_map_canvas.bind("<MouseWheel>", self._scroll_primer_map)
+        self.primer_map_canvas.bind("<Button-4>", self._scroll_primer_map)
+        self.primer_map_canvas.bind("<Button-5>", self._scroll_primer_map)
+
+    def _build_specificity_tab(self) -> None:
+        frame = self.tab_specificity
+        frame.columnconfigure(1, weight=1)
+
+        ttk.Label(
+            frame,
+            text="Os primers selecionados na aba IDT serão preenchidos automaticamente aqui.",
+            font=("TkDefaultFont", 10, "italic"),
+            wraplength=600
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 12))
+
+        self._entry(frame, 1, "Primer Forward", self._var("pb_forward", ""), width=50, column=0)
+        self._entry(frame, 2, "Primer Reverse", self._var("pb_reverse", ""), width=50, column=0)
+
+        ttk.Label(frame, text="Exon junction span").grid(row=3, column=0, sticky="e", padx=4, pady=4)
+        pb_span_combo = ttk.Combobox(
+            frame, 
+            textvariable=self._var("pb_span", "No preference"),
+            values=[
+                "No preference", 
+                "Primer must span an exon-exon junction", 
+                "Primer may not span an exon-exon junction"
+            ],
+            state="readonly",
+            width=48
+        )
+        pb_span_combo.grid(row=3, column=1, sticky="w", padx=4, pady=4)
+
+        ttk.Label(frame, text="Database").grid(row=4, column=0, sticky="e", padx=4, pady=4)
+        pb_db_combo = ttk.Combobox(
+            frame, 
+            textvariable=self._var("pb_database", "Refseq mRNA"),
+            values=[
+                "Refseq mRNA", 
+                "Refseq reference genomes", 
+                "Genomes for selected eukaryotic organisms (primary assembly only)", 
+                "core_nt", 
+                "Refseq RNA (refseq_rna)", 
+                "nt"
+            ],
+            state="readonly",
+            width=48
+        )
+        pb_db_combo.grid(row=4, column=1, sticky="w", padx=4, pady=4)
+
+        ttk.Label(frame, text="Organism").grid(row=5, column=0, sticky="e", padx=4, pady=4)
+        self._entry(frame, 5, "", self._var("pb_organism", "Homo sapiens (taxid:9606)"), width=50, column=1)
+
+        ttk.Button(
+            frame, 
+            text="Analisar Especificidade (NCBI Primer-BLAST)", 
+            command=self.run_primer_blast
+        ).grid(row=6, column=0, columnspan=2, pady=20)
+
+    def run_primer_blast(self) -> None:
+        fwd = self.vars["pb_forward"].get().strip()
+        rev = self.vars["pb_reverse"].get().strip()
+        if not fwd or not rev:
+            messagebox.showwarning("Faltam Primers", "Preencha ou selecione os primers na aba IDT antes de analisar.")
+            return
+
+        span_val = self.vars["pb_span"].get()
+        span_map = {
+            "No preference": "0", 
+            "Primer must span an exon-exon junction": "1", 
+            "Primer may not span an exon-exon junction": "2"
+        }
+
+        db_val = self.vars["pb_database"].get()
+        db_map = {
+            "Refseq mRNA": "refseq_mrna", 
+            "Refseq reference genomes": "refseq_representative_genomes", 
+            "Genomes for selected eukaryotic organisms (primary assembly only)": "PRIMERDB/genome_selected_species", 
+            "core_nt": "core_nt", 
+            "Refseq RNA (refseq_rna)": "refseq_rna", 
+            "nt": "nt"
+        }
+        
+        org = self.vars["pb_organism"].get().strip()
+        
+        from ncbi_primer_blast import open_primer_blast
+        self.log(f"Enviando primers para NCBI Primer-BLAST (Database: {db_val}, Organism: {org})...")
+        open_primer_blast(fwd, rev, span_map.get(span_val, "0"), db_map.get(db_val, "refseq_mrna"), org)
+
+    def _on_idt_selection_changed(self, _event=None) -> None:
+        pair = self._selected_idt_pair()
+        if pair:
+            self.vars["pb_forward"].set(pair.forward.sequence)
+            self.vars["pb_reverse"].set(pair.reverse.sequence)
 
     def _build_idt_tab(self) -> None:
         frame = self.tab_idt
@@ -353,12 +681,16 @@ class GenePipelineApp(tk.Tk):
         self._entry(frame, 3, "Oligo (µM)", self._var("idt_oligo", 0.25, "float"), column=2)
         self._entry(frame, 4, "Temperatura de folding (°C)", self._var("idt_fold", 37.0, "float"), column=0)
         self._entry(frame, 4, "Quantidade de pares", self._var("idt_top_n", 10, "int"), column=2)
+        self._entry(frame, 5, "Primer Forward Externo", self._var("idt_ext_f", ""), column=0)
+        self._entry(frame, 5, "Primer Reverse Externo", self._var("idt_ext_r", ""), column=2)
 
         actions = ttk.Frame(frame)
-        actions.grid(row=5, column=0, columnspan=4, pady=10)
+        actions.grid(row=6, column=0, columnspan=4, pady=10)
         ttk.Button(actions, text="Testar autenticação", command=self.test_idt).pack(side="left", padx=4)
         ttk.Button(actions, text="Analisar melhores pares na IDT", command=self.run_idt).pack(side="left", padx=4)
-        ttk.Label(frame, text="A senha não é gravada no arquivo de configuração. Não cole credenciais nesta conversa.", wraplength=900).grid(row=6, column=0, columnspan=4, sticky="w", padx=4, pady=4)
+        ttk.Button(actions, text="Analisar par específico...", command=self.run_idt_specific).pack(side="left", padx=4)
+        ttk.Button(actions, text="Analisar par externo", command=self.run_idt_external).pack(side="left", padx=4)
+        ttk.Label(frame, text="A senha não é gravada no arquivo de configuração. Não cole credenciais nesta conversa.", wraplength=900).grid(row=7, column=0, columnspan=4, sticky="w", padx=4, pady=4)
 
         columns = ("rank", "f_tm", "r_tm", "f_hp", "r_hp", "f_sd", "r_sd", "hetero")
         self.idt_tree = ttk.Treeview(frame, columns=columns, show="headings")
@@ -369,8 +701,21 @@ class GenePipelineApp(tk.Tk):
         ]:
             self.idt_tree.heading(col, text=text)
             self.idt_tree.column(col, width=width, anchor="center")
-        self.idt_tree.grid(row=7, column=0, columnspan=4, sticky="nsew", padx=4, pady=8)
-        frame.rowconfigure(7, weight=1)
+        self.idt_tree.grid(row=8, column=0, columnspan=4, sticky="nsew", padx=4, pady=8)
+        idt_result_actions = ttk.Frame(frame)
+        idt_result_actions.grid(row=9, column=0, columnspan=4, sticky="w", padx=4, pady=(0, 4))
+        ttk.Button(
+            idt_result_actions,
+            text="Ver sequências do par selecionado",
+            command=self.show_selected_idt_pair,
+        ).pack(side="left")
+        ttk.Label(
+            idt_result_actions,
+            text="Selecione uma linha do ranking para consultar os primers Forward e Reverse.",
+        ).pack(side="left", padx=8)
+        self.idt_tree.bind("<Double-1>", lambda _event: self.show_selected_idt_pair())
+        self.idt_tree.bind("<<TreeviewSelect>>", self._on_idt_selection_changed)
+        frame.rowconfigure(8, weight=1)
 
     def log(self, message: str) -> None:
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -382,7 +727,7 @@ class GenePipelineApp(tk.Tk):
         else:
             self.after(0, append)
 
-    def _run_background(self, label: str, function, on_success) -> None:
+    def _run_background(self, label: str, function, on_success, on_error=None) -> None:
         if self.busy:
             messagebox.showwarning("Processo em andamento", "Aguarde a operação atual terminar.")
             return
@@ -394,7 +739,9 @@ class GenePipelineApp(tk.Tk):
                 result = function()
                 self.worker_queue.put(("success", (on_success, result)))
             except Exception as exc:
-                self.worker_queue.put(("error", (exc, traceback.format_exc())))
+                self.worker_queue.put(
+                    ("error", (exc, traceback.format_exc(), on_error))
+                )
         threading.Thread(target=worker, daemon=True).start()
 
     def _poll_worker_queue(self) -> None:
@@ -407,8 +754,10 @@ class GenePipelineApp(tk.Tk):
                     callback, result = payload
                     callback(result)
                 else:
-                    exc, trace = payload
+                    exc, trace, error_callback = payload
                     self.log(trace)
+                    if error_callback is not None:
+                        error_callback(exc)
                     messagebox.showerror("Erro", str(exc))
         except queue.Empty:
             pass
@@ -454,6 +803,9 @@ class GenePipelineApp(tk.Tk):
             messagebox.showwarning("Dados locais", str(exc))
             return
 
+        if settings:
+            settings = migrate_ncbi_specificity_profile_settings(settings)
+
         for name, value in {**settings, **credentials}.items():
             if name in self.vars:
                 self.vars[name].set(value)
@@ -482,6 +834,12 @@ class GenePipelineApp(tk.Tk):
         return True
 
     def delete_local_state(self) -> None:
+        if self.busy:
+            messagebox.showwarning(
+                "Processo em andamento",
+                "Aguarde a operação atual terminar antes de apagar os dados locais.",
+            )
+            return
         confirmed = messagebox.askyesno(
             "Apagar dados locais",
             "Apagar configurações e credenciais salvas neste computador?",
@@ -490,18 +848,20 @@ class GenePipelineApp(tk.Tk):
             return
         try:
             self.local_state_store.delete()
-        except Exception as exc:
-            self.log(f"Não foi possível apagar os dados locais: {exc}")
-            messagebox.showerror("Dados locais", str(exc))
-            return
+        except:
+            pass
         for name in CREDENTIAL_VARIABLES:
             if name in self.vars:
                 self.vars[name].set("")
         self.local_persistence_enabled = False
         self.log("Configurações e credenciais locais apagadas.")
-        messagebox.showinfo("Dados locais", "Os dados salvos neste computador foram apagados.")
-
     def close_app(self) -> None:
+        if self.busy:
+            messagebox.showwarning(
+                "Processo em andamento",
+                "Aguarde a operação atual terminar antes de fechar a ferramenta.",
+            )
+            return
         if self.local_persistence_enabled and not self.save_local_state():
             close_without_saving = messagebox.askyesno(
                 "Fechar sem salvar",
@@ -518,13 +878,20 @@ class GenePipelineApp(tk.Tk):
         self.clustal_result_type = ""
         self.regions = []
         self.pairs = []
+        self.primer_map_target_length = 0
+        self.primer_map_target_label = ""
+        self.primer_map_exons = []
         self.clustal_info.set("Nenhum alinhamento executado.")
         self.alignment_preview.delete("1.0", "end")
         self.region_tree.delete(*self.region_tree.get_children())
         self.pair_tree.delete(*self.pair_tree.get_children())
         self.idt_tree.delete(*self.idt_tree.get_children())
+        self._refresh_primer_map()
         if announce and had_results:
-            self.log("A seleção de sequências mudou; execute o Clustal Omega novamente.")
+            self.log(
+                "A seleção de sequências mudou; alinhe novamente ou deixe uma única "
+                "sequência marcada para o desenho direto."
+            )
 
     def search_ncbi(self) -> None:
         params = NcbiSearchParams(
@@ -643,20 +1010,39 @@ class GenePipelineApp(tk.Tk):
         if path:
             Path(path).write_text(fasta, encoding="utf-8")
 
-    def run_clustal(self) -> None:
-        fasta = records_to_fasta(self.records)
-        if fasta.count(">") < 3:
-            messagebox.showwarning("Poucas sequências", "Selecione pelo menos três sequências.")
+    def open_single_sequence_design(self) -> None:
+        selected = [record for record in self.records if record.selected]
+        if len(selected) != 1:
+            messagebox.showwarning(
+                "Seleção para desenho direto",
+                "Deixe exatamente uma sequência marcada para desenhar sem alinhamento.",
+            )
             return
-
-        params = ClustalParams(
-            email=self.vars["ebi_email"].get(), title=self.vars["clustal_title"].get(),
-            iterations=self.vars["iterations"].get(), dealign=self.vars["dealign"].get(),
-            mbed=self.vars["mbed"].get(), poll_seconds=self.vars["poll_seconds"].get(),
-            timeout_minutes=self.vars["timeout_minutes"].get(),
+        self.notebook.select(self.tab_design)
+        self.log(
+            f"Desenho direto habilitado para {selected[0].accession}; "
+            "o Clustal não é necessário."
         )
 
+    def run_clustal(self) -> None:
+        try:
+            strategy = alignment_strategy(self.records)
+        except ValueError as exc:
+            messagebox.showwarning("Poucas sequências", str(exc))
+            return
+        fasta = records_to_fasta(self.records)
+
+        if strategy == "clustal":
+            params = ClustalParams(
+                email=self.vars["ebi_email"].get(), title=self.vars["clustal_title"].get(),
+                iterations=self.vars["iterations"].get(), dealign=self.vars["dealign"].get(),
+                mbed=self.vars["mbed"].get(), poll_seconds=self.vars["poll_seconds"].get(),
+                timeout_minutes=self.vars["timeout_minutes"].get(),
+            )
+
         def task():
+            if strategy == "pairwise":
+                return "", "pareado-local-fasta", pairwise_align_fasta(fasta)
             return EbiClustalClient(log=self.log).run(fasta, params)
 
         def done(result):
@@ -665,12 +1051,27 @@ class GenePipelineApp(tk.Tk):
             self.clustal_job_id = job_id
             self.clustal_result_type = result_type
             self.alignment = alignment
-            self.clustal_info.set(f"Job: {self.clustal_job_id} | Resultado: {self.clustal_result_type} | {len(self.alignment):,} caracteres")
+            if strategy == "pairwise":
+                self.clustal_info.set(
+                    f"Alinhamento pareado local | Resultado: {self.clustal_result_type} | "
+                    f"{len(self.alignment):,} caracteres"
+                )
+                self.log("Duas sequências alinhadas localmente em modo global pareado.")
+            else:
+                self.clustal_info.set(
+                    f"Job: {self.clustal_job_id} | Resultado: {self.clustal_result_type} | "
+                    f"{len(self.alignment):,} caracteres"
+                )
             self.alignment_preview.delete("1.0", "end")
             self.alignment_preview.insert("1.0", self.alignment[:100000])
             self.notebook.select(self.tab_design)
 
-        self._run_background("Executando Clustal Omega…", task, done)
+        label = (
+            "Alinhando duas sequências localmente…"
+            if strategy == "pairwise"
+            else "Executando Clustal Omega…"
+        )
+        self._run_background(label, task, done)
 
     def _design_params(self) -> PrimerDesignParams:
         return PrimerDesignParams(
@@ -687,7 +1088,10 @@ class GenePipelineApp(tk.Tk):
 
     def analyze_conservation(self) -> None:
         if not self.alignment:
-            messagebox.showwarning("Sem alinhamento", "Execute o Clustal Omega primeiro.")
+            messagebox.showwarning(
+                "Sem alinhamento",
+                "Alinhe duas ou mais sequências antes de analisar conservação.",
+            )
             return
         self.regions = find_conserved_regions(
             self.alignment, self.vars["identity_pct"].get() / 100.0,
@@ -696,17 +1100,22 @@ class GenePipelineApp(tk.Tk):
         self.region_tree.delete(*self.region_tree.get_children())
         for region in self.regions:
             self.region_tree.insert("", "end", values=(
-                region.consensus_start, region.consensus_end, region.length,
+                region.reference_accession, region.reference_start, region.reference_end, region.length,
                 f"{region.mean_identity * 100:.1f}%", f"{region.mean_coverage * 100:.1f}%", region.sequence,
             ))
+        self.results_notebook.select(self.region_results_tab)
+        self.notebook.select(self.tab_results)
         self.log(f"Foram encontradas {len(self.regions)} regiões conservadas.")
 
     def generate_primers(self) -> None:
-        if not self.alignment:
-            messagebox.showwarning("Sem alinhamento", "Execute o Clustal Omega primeiro.")
+        try:
+            source_mode, source_payload, single_record = primer_design_source(
+                self.alignment, self.records
+            )
+        except ValueError as exc:
+            messagebox.showwarning("Entrada para desenho", str(exc))
             return
 
-        alignment = self.alignment
         design_params = self._design_params()
         require_junction = self.vars["require_exon_junction"].get()
         reference_record: SequenceRecord | None = None
@@ -736,28 +1145,69 @@ class GenePipelineApp(tk.Tk):
 
         def task():
             if require_junction and reference_record is not None:
-                return generate_exon_junction_primer_pairs(
-                    alignment,
-                    design_params,
-                    reference_record.accession,
-                    reference_record.exons,
-                    min_5_prime_match=min_5_prime_match,
-                    min_3_prime_match=min_3_prime_match,
+                junction_input = (
+                    reference_record.fasta()
+                    if source_mode == "single"
+                    else source_payload
                 )
-            return generate_primer_pairs(alignment, design_params)
+                return (
+                    generate_exon_junction_primer_pairs(
+                        junction_input,
+                        design_params,
+                        reference_record.accession,
+                        reference_record.exons,
+                        min_5_prime_match=min_5_prime_match,
+                        min_3_prime_match=min_3_prime_match,
+                    ),
+                    reference_record.length,
+                )
+            if source_mode == "single" and single_record is not None:
+                return (
+                    generate_primer_pairs_for_sequence(
+                        source_payload,
+                        design_params,
+                        reference_accession=single_record.accession,
+                    ),
+                    len(single_record.sequence),
+                )
+            pairs = generate_primer_pairs(source_payload, design_params)
+            consensus, _, _, _, _ = build_consensus_and_mask(
+                source_payload,
+                design_params.identity_threshold,
+                design_params.coverage_threshold,
+            )
+            return pairs, len(consensus)
 
         def done(result):
-            self.pairs = result
+            self.pairs, self.primer_map_target_length = result
+            if require_junction and reference_record is not None:
+                self.primer_map_target_label = (
+                    f"Transcrito de referência {reference_record.accession}"
+                )
+                self.primer_map_exons = list(reference_record.exons)
+            elif source_mode == "single" and single_record is not None:
+                self.primer_map_target_label = f"Sequência {single_record.accession}"
+                self.primer_map_exons = []
+            else:
+                self.primer_map_target_label = "Consenso do alinhamento"
+                self.primer_map_exons = []
             self._refresh_pairs()
+            self._refresh_primer_map()
             self.idt_tree.delete(*self.idt_tree.get_children())
+            self.results_notebook.select(self.primer_map_tab)
             if require_junction and reference_record is not None:
                 self.log(
                     f"Foram gerados {len(self.pairs)} pares com primer em junção "
                     f"para {reference_record.accession}."
                 )
+            elif source_mode == "single" and single_record is not None:
+                self.log(
+                    f"Foram gerados {len(self.pairs)} pares diretamente da sequência "
+                    f"{single_record.accession}, sem Clustal."
+                )
             else:
                 self.log(f"Foram gerados {len(self.pairs)} pares candidatos.")
-            self.notebook.select(self.tab_idt)
+            self.notebook.select(self.tab_results)
 
         self._run_background("Gerando candidatos de primers…", task, done)
 
@@ -782,6 +1232,265 @@ class GenePipelineApp(tk.Tk):
                 pair.forward.sequence, f"{pair.forward.tm_c:.2f}", f"{pair.forward.gc_percent:.1f}%",
                 pair.reverse.sequence, f"{pair.reverse.tm_c:.2f}", f"{pair.reverse.gc_percent:.1f}%",
             ))
+
+    @staticmethod
+    def _format_nt_position(position: int) -> str:
+        return f"{position:,}".replace(",", ".")
+
+    def _refresh_primer_map(self) -> None:
+        if not hasattr(self, "primer_map_canvas"):
+            return
+        if self.primer_map_target_length > 0:
+            pair_count = len(self.pairs)
+            pair_label = "par" if pair_count == 1 else "pares"
+            self.primer_map_summary.set(
+                f"{self.primer_map_target_label}  •  "
+                f"{self._format_nt_position(self.primer_map_target_length)} nt  •  "
+                f"{pair_count} melhores {pair_label}"
+            )
+        else:
+            self.primer_map_summary.set(
+                "Gere os pares de primers para visualizar sua localização."
+            )
+        self._schedule_primer_map_redraw()
+
+    def _schedule_primer_map_redraw(self, _event=None) -> None:
+        if self._primer_map_redraw_after_id is not None:
+            try:
+                self.after_cancel(self._primer_map_redraw_after_id)
+            except tk.TclError:
+                pass
+        self._primer_map_redraw_after_id = self.after_idle(self._draw_primer_map)
+
+    def _scroll_primer_map(self, event):
+        if getattr(event, "num", None) == 4:
+            direction = -1
+        elif getattr(event, "num", None) == 5:
+            direction = 1
+        else:
+            delta = getattr(event, "delta", 0)
+            if not delta:
+                return None
+            direction = -1 if delta > 0 else 1
+        self.primer_map_canvas.yview_scroll(direction, "units")
+        return "break"
+
+    def _draw_primer_map(self) -> None:
+        self._primer_map_redraw_after_id = None
+        canvas = self.primer_map_canvas
+        canvas.delete("all")
+        width = max(canvas.winfo_width(), 760)
+        viewport_height = max(canvas.winfo_height(), 260)
+
+        if self.primer_map_target_length < 1:
+            canvas.configure(scrollregion=(0, 0, width, viewport_height))
+            canvas.create_text(
+                width / 2,
+                viewport_height / 2,
+                text="Nenhum mapa disponível. Gere os pares de primers primeiro.",
+                fill="#546E7A",
+                font=("TkDefaultFont", 11),
+            )
+            return
+
+        plot_left = 118.0
+        plot_right = float(width - 36)
+        try:
+            layout = build_primer_map_layout(
+                self.pairs,
+                self.primer_map_target_length,
+                plot_left,
+                plot_right,
+                first_row_y=132.0,
+                row_height=58.0,
+                bottom_padding=26.0,
+            )
+        except (TypeError, ValueError) as exc:
+            canvas.configure(scrollregion=(0, 0, width, viewport_height))
+            canvas.create_text(
+                width / 2,
+                viewport_height / 2,
+                text=f"Não foi possível desenhar o mapa: {exc}",
+                fill="#B71C1C",
+                width=width - 80,
+                justify="center",
+            )
+            return
+
+        content_height = max(layout.height, float(viewport_height))
+        canvas.configure(scrollregion=(0, 0, width, content_height))
+
+        for index, geometry in enumerate(layout.pairs):
+            if index % 2:
+                canvas.create_rectangle(
+                    0,
+                    geometry.y - 27,
+                    width,
+                    geometry.y + 27,
+                    fill="#F7F9FA",
+                    outline="",
+                )
+
+        ticks = nice_tick_positions(self.primer_map_target_length, max_ticks=9)
+        for position in ticks:
+            x = sequence_position_to_pixel(
+                position,
+                self.primer_map_target_length,
+                plot_left,
+                plot_right,
+            )
+            canvas.create_line(
+                x,
+                36,
+                x,
+                content_height - 12,
+                fill="#ECEFF1",
+                width=1,
+            )
+            canvas.create_line(x, 48, x, 55, fill="#607D8B", width=1)
+            canvas.create_text(
+                x,
+                31,
+                text=self._format_nt_position(position),
+                anchor="s",
+                fill="#455A64",
+                font=("TkDefaultFont", 8),
+            )
+
+        target_y = 70.0
+        canvas.create_text(
+            plot_left - 10,
+            target_y,
+            text="Alvo",
+            anchor="e",
+            fill="#37474F",
+            font=("TkDefaultFont", 9, "bold"),
+        )
+        if self.primer_map_exons:
+            exon_colors = ("#455A64", "#607D8B")
+            for index, exon in enumerate(self.primer_map_exons):
+                exon_span = sequence_span_to_pixels(
+                    exon.start,
+                    exon.end,
+                    self.primer_map_target_length,
+                    plot_left,
+                    plot_right,
+                )
+                left, right = exon_span.left_x, exon_span.right_x
+                canvas.create_rectangle(
+                    left,
+                    target_y - 10,
+                    right,
+                    target_y + 10,
+                    fill=exon_colors[index % len(exon_colors)],
+                    outline="white",
+                )
+                if right - left >= 28:
+                    canvas.create_text(
+                        (left + right) / 2,
+                        target_y,
+                        text=f"E{exon.number or index + 1}",
+                        fill="white",
+                        font=("TkDefaultFont", 8, "bold"),
+                    )
+        else:
+            canvas.create_rectangle(
+                plot_left,
+                target_y - 7,
+                plot_right,
+                target_y + 7,
+                fill="#546E7A",
+                outline="",
+            )
+
+        if not layout.pairs:
+            canvas.create_text(
+                (plot_left + plot_right) / 2,
+                137,
+                text="Nenhum par candidato atende aos parâmetros atuais.",
+                fill="#546E7A",
+                font=("TkDefaultFont", 10),
+            )
+            return
+
+        for geometry in layout.pairs:
+            pair = geometry.pair
+            y = geometry.y
+            canvas.create_text(
+                12,
+                y - 9,
+                text=f"Par {pair.rank}",
+                anchor="w",
+                fill="#263238",
+                font=("TkDefaultFont", 9, "bold"),
+            )
+            canvas.create_text(
+                12,
+                y + 10,
+                text=f"{pair.amplicon_length} bp",
+                anchor="w",
+                fill="#607D8B",
+                font=("TkDefaultFont", 8),
+            )
+            canvas.create_text(
+                plot_right,
+                y - 14,
+                text=(
+                    f"F {pair.forward.start}–{pair.forward.end}   |   "
+                    f"R {pair.reverse.start}–{pair.reverse.end}"
+                ),
+                anchor="e",
+                fill="#78909C",
+                font=("TkDefaultFont", 8),
+            )
+            canvas.create_line(
+                geometry.amplicon.left_x,
+                y,
+                geometry.amplicon.right_x,
+                y,
+                fill="#90A4AE",
+                width=3,
+            )
+            canvas.create_line(
+                geometry.forward.tail_x,
+                y,
+                geometry.forward.tip_x,
+                y,
+                fill="#1565C0",
+                width=5,
+                arrow="last",
+                arrowshape=(8, 10, 4),
+            )
+            canvas.create_line(
+                geometry.reverse.tail_x,
+                y,
+                geometry.reverse.tip_x,
+                y,
+                fill="#C2185B",
+                width=5,
+                arrow="last",
+                arrowshape=(8, 10, 4),
+            )
+
+    @staticmethod
+    def _ncbi_classification_label(classification: str) -> str:
+        return {
+            "target": "Alvo",
+            "off_target": "Outro gene",
+        }.get(classification, classification or "Não classificado")
+
+    def _ncbi_target_accessions(self) -> tuple[str, ...]:
+        accessions = {
+            record.accession.strip()
+            for record in self.records
+            if record.selected and record.accession.strip()
+        }
+        accessions.update(
+            pair.reference_accession.strip()
+            for pair in self.pairs
+            if pair.reference_accession.strip()
+        )
+        return tuple(sorted(accessions))
 
     def _idt_values(self):
         credentials = IdtCredentials(
@@ -809,22 +1518,89 @@ class GenePipelineApp(tk.Tk):
         if not self.pairs:
             messagebox.showwarning("Sem primers", "Gere os pares de primers primeiro.")
             return
-        count = min(self.vars["idt_top_n"].get(), len(self.pairs))
+        
+        chunk_size = self.vars["idt_top_n"].get()
+        pairs_to_analyze = [p for p in self.pairs if not p.idt][:chunk_size]
+        
+        if not pairs_to_analyze:
+            messagebox.showinfo("IDT", "Todos os pares gerados já foram analisados na IDT.")
+            return
+            
         credentials, conditions = self._idt_values()
-        pairs_to_analyze = self.pairs[:count]
 
         def task():
             client = IdtClient(credentials, log=self.log)
             client.authenticate()
             for pair in pairs_to_analyze:
                 pair.idt = client.analyze_pair(pair.forward.sequence, pair.reverse.sequence, conditions)
-            return count
+            return len(pairs_to_analyze)
 
         def done(processed):
             self._refresh_idt()
-            self.log(f"IDT: {processed} pares analisados.")
+            self.log(f"IDT: {processed} novos pares analisados.")
 
         self._run_background("Analisando primers na IDT…", task, done)
+
+    def run_idt_specific(self) -> None:
+        if not self.pairs:
+            messagebox.showwarning("Sem primers", "Gere os pares de primers primeiro.")
+            return
+
+        rank = simpledialog.askinteger(
+            "Analisar par específico",
+            "Digite o Rank do par de primers da tabela de resultados:",
+            minvalue=1,
+            maxvalue=len(self.pairs),
+            parent=self
+        )
+        if not rank:
+            return
+
+        pair = next((p for p in self.pairs if p.rank == rank), None)
+        if not pair:
+            messagebox.showwarning("Par não encontrado", f"O par de Rank {rank} não foi encontrado.")
+            return
+
+        credentials, conditions = self._idt_values()
+
+        def task():
+            client = IdtClient(credentials, log=self.log)
+            client.authenticate()
+            pair.idt = client.analyze_pair(pair.forward.sequence, pair.reverse.sequence, conditions)
+            return 1
+
+        def done(processed):
+            self._refresh_idt()
+            self.log(f"IDT: 1 par analisado (Rank {rank}).")
+
+        self._run_background(f"Analisando par {rank} na IDT…", task, done)
+
+    def run_idt_external(self) -> None:
+        f_seq = self.vars.get("idt_ext_f", tk.StringVar()).get().strip().upper()
+        r_seq = self.vars.get("idt_ext_r", tk.StringVar()).get().strip().upper()
+
+        if not f_seq or not r_seq:
+            messagebox.showwarning("Sequências ausentes", "Preencha os campos Primer Forward e Primer Reverse externos.")
+            return
+
+        credentials, conditions = self._idt_values()
+
+        def task():
+            client = IdtClient(credentials, log=self.log)
+            client.authenticate()
+            result = client.analyze_pair(f_seq, r_seq, conditions)
+            return result
+
+        def done(result):
+            rank = max((p.rank for p in self.pairs), default=0) + 1
+            f_cand = PrimerCandidate("forward", 0, len(f_seq), f_seq, len(f_seq), 0.0, 0.0, 0.0)
+            r_cand = PrimerCandidate("reverse", 0, len(r_seq), r_seq, len(r_seq), 0.0, 0.0, 0.0)
+            new_pair = PrimerPair(rank, f_cand, r_cand, 0, 0, 0, 0.0, idt=result)
+            self.pairs.append(new_pair)
+            self._refresh_idt()
+            self.log(f"IDT: 1 par externo analisado e adicionado como Rank {rank}.")
+
+        self._run_background("Analisando par externo na IDT…", task, done)
 
     @staticmethod
     def _value(data, *keys):
@@ -842,13 +1618,51 @@ class GenePipelineApp(tk.Tk):
                 continue
             f = pair.idt.get("forward", {})
             r = pair.idt.get("reverse", {})
-            self.idt_tree.insert("", "end", values=(
+            self.idt_tree.insert("", "end", iid=str(pair.rank), values=(
                 pair.rank,
                 self._value(f, "analysis", "MeltTemp"), self._value(r, "analysis", "MeltTemp"),
                 self._value(f, "strongest_hairpin", "deltaG"), self._value(r, "strongest_hairpin", "deltaG"),
                 self._value(f, "strongest_self_dimer", "DeltaG"), self._value(r, "strongest_self_dimer", "DeltaG"),
                 self._value(pair.idt, "strongest_hetero_dimer", "DeltaG"),
             ))
+
+    def _selected_idt_pair(self) -> PrimerPair | None:
+        selected = self.idt_tree.selection()
+        if not selected:
+            return None
+        try:
+            rank = int(selected[0])
+        except (TypeError, ValueError):
+            return None
+        return next((pair for pair in self.pairs if pair.rank == rank and pair.idt), None)
+
+    def show_selected_idt_pair(self) -> None:
+        pair = self._selected_idt_pair()
+        if pair is None:
+            messagebox.showwarning(
+                "Selecione um par",
+                "Selecione no ranking da IDT o par cujas sequências deseja visualizar.",
+            )
+            return
+
+        dialog = tk.Toplevel(self)
+        dialog.title(f"Sequências dos primers — Rank IDT {pair.rank}")
+        dialog.transient(self)
+        dialog.geometry("650x330")
+        dialog.minsize(520, 260)
+
+        text = ScrolledText(dialog, wrap="word", padx=12, pady=12)
+        text.pack(fill="both", expand=True, padx=10, pady=(10, 6))
+        text.insert(
+            "1.0",
+            f"Rank IDT: {pair.rank}\n"
+            f"Score local: {pair.score:.2f}\n"
+            f"Amplicon: {pair.amplicon_length} bp\n\n"
+            f"Primer Forward (5′ → 3′)\n{pair.forward.sequence}\n\n"
+            f"Primer Reverse (5′ → 3′)\n{pair.reverse.sequence}\n",
+        )
+        text.configure(state="disabled")
+        ttk.Button(dialog, text="Fechar", command=dialog.destroy).pack(pady=(0, 10))
 
     def config_data(self) -> dict:
         return {
@@ -867,6 +1681,7 @@ class GenePipelineApp(tk.Tk):
         if not path:
             return
         data = json.loads(Path(path).read_text(encoding="utf-8"))
+        data = migrate_ncbi_specificity_profile_settings(data)
         for name, value in data.items():
             if name in self.vars:
                 self.vars[name].set(value)
@@ -893,6 +1708,7 @@ class GenePipelineApp(tk.Tk):
         if self.pairs:
             export_primers_xlsx(target / "primers.xlsx", self.pairs)
             write_json(target / "primers.json", self.pairs)
+            # The remaining specificity exports are removed since Primer-BLAST is now a web view.
         self.log(f"Projeto exportado para {target}")
         messagebox.showinfo("Exportação", f"Arquivos salvos em:\n{target}")
 

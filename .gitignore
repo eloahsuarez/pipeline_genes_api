@@ -9,6 +9,9 @@ __pycache__/
 .coverage
 htmlcov/
 
+# Ferramentas científicas instaladas localmente
+.tools/
+
 # Empacotamento
 build/
 dist/

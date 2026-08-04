@@ -7,6 +7,7 @@ from io import StringIO
 from typing import Iterable
 
 from Bio import SeqIO
+from Bio.Align import PairwiseAligner
 from Bio.Seq import Seq
 from Bio.SeqUtils import MeltingTemp as mt
 
@@ -20,6 +21,14 @@ from models import (
 
 
 DNA = set("ACGT")
+MAX_PAIRWISE_ALIGNMENT_CELLS = 25_000_000
+
+PAIRWISE_ALIGNER = PairwiseAligner()
+PAIRWISE_ALIGNER.mode = "global"
+PAIRWISE_ALIGNER.match_score = 2.0
+PAIRWISE_ALIGNER.mismatch_score = -1.0
+PAIRWISE_ALIGNER.open_gap_score = -2.0
+PAIRWISE_ALIGNER.extend_gap_score = -0.5
 
 
 @dataclass(slots=True)
@@ -60,10 +69,49 @@ def _validate_primer_design_params(params: PrimerDesignParams) -> None:
         raise ValueError("A quantidade de pares deve ser maior que zero.")
 
 
+def pairwise_align_fasta(fasta_text: str) -> str:
+    """Alinha globalmente exatamente duas sequências e devolve FASTA alinhado."""
+
+    records = list(SeqIO.parse(StringIO(fasta_text), "fasta"))
+    if len(records) != 2:
+        raise ValueError("O alinhamento pareado requer exatamente duas sequências FASTA.")
+
+    sequences = [str(record.seq) for record in records]
+    if any(not sequence for sequence in sequences):
+        raise ValueError("As sequências do alinhamento pareado não podem estar vazias.")
+    if any("-" in sequence for sequence in sequences):
+        raise ValueError("As sequências de entrada do alinhamento pareado não podem conter gaps.")
+
+    cell_count = (len(sequences[0]) + 1) * (len(sequences[1]) + 1)
+    if cell_count > MAX_PAIRWISE_ALIGNMENT_CELLS:
+        raise ValueError(
+            "O alinhamento pareado excede o limite local de "
+            f"{MAX_PAIRWISE_ALIGNMENT_CELLS:,} células."
+        )
+
+    alignment = PAIRWISE_ALIGNER.align(sequences[0], sequences[1])[0]
+    aligned_sequences = [alignment[0], alignment[1]]
+    if len(aligned_sequences[0]) != len(aligned_sequences[1]):
+        raise RuntimeError("O alinhador pareado retornou sequências com comprimentos diferentes.")
+    if any(
+        aligned.replace("-", "") != original
+        for aligned, original in zip(aligned_sequences, sequences)
+    ):
+        raise RuntimeError("O alinhador pareado não preservou as sequências de entrada.")
+
+    chunks: list[str] = []
+    for record, sequence in zip(records, aligned_sequences):
+        header = record.description or record.id
+        chunks.append(f">{header}\n{sequence}\n")
+    return "".join(chunks)
+
+
 def parse_alignment_fasta(text: str) -> list[tuple[str, str]]:
     records = [(record.id, str(record.seq).upper()) for record in SeqIO.parse(StringIO(text), "fasta")]
-    if len(records) < 2:
-        raise ValueError("O alinhamento FASTA contém menos de duas sequências.")
+    if not records:
+        raise ValueError("O alinhamento FASTA não contém sequências.")
+    if any(not sequence for _, sequence in records):
+        raise ValueError("O alinhamento FASTA contém uma sequência vazia.")
     lengths = {len(sequence) for _, sequence in records}
     if len(lengths) != 1:
         raise ValueError("As sequências do alinhamento não possuem o mesmo comprimento.")
@@ -99,6 +147,16 @@ def build_consensus_and_mask(
     for index in range(aln_len):
         base, identity, coverage = _column_statistics(sequences, index)
         if base not in DNA:
+            # Preserve colunas ambíguas como barreiras no consenso. Removê-las
+            # juntaria bases não contíguas e poderia criar um primer artificial
+            # atravessando uma posição N. Colunas compostas só por gaps podem
+            # ser descartadas com segurança.
+            if any(sequence[index] not in {"-", "."} for sequence in sequences):
+                ungapped_consensus.append("N")
+                mask.append(False)
+                identities.append(identity)
+                coverages.append(coverage)
+                alignment_positions.append(index + 1)
             continue
         ungapped_consensus.append(base)
         mask.append(identity >= identity_threshold and coverage >= coverage_threshold)
@@ -117,6 +175,15 @@ def find_conserved_regions(
     consensus, mask, identities, coverages, aln_positions = build_consensus_and_mask(
         alignment_text, identity_threshold, coverage_threshold
     )
+    records = parse_alignment_fasta(alignment_text)
+    ref_id = ""
+    ref_seq = ""
+    if records:
+        ref_id, ref_seq = records[0]
+        
+    def aln_to_seq_coord(seq: str, aln_pos: int) -> int:
+        return len(seq[:aln_pos].replace("-", "").replace(".", ""))
+        
     regions: list[ConservedRegion] = []
     start: int | None = None
 
@@ -126,16 +193,21 @@ def find_conserved_regions(
             return
         length = end_exclusive - start
         if length >= min_length:
+            aln_start = aln_positions[start]
+            aln_end = aln_positions[end_exclusive - 1]
             regions.append(
                 ConservedRegion(
-                    alignment_start=aln_positions[start],
-                    alignment_end=aln_positions[end_exclusive - 1],
+                    alignment_start=aln_start,
+                    alignment_end=aln_end,
                     consensus_start=start + 1,
                     consensus_end=end_exclusive,
                     length=length,
                     sequence=consensus[start:end_exclusive],
                     mean_identity=sum(identities[start:end_exclusive]) / length,
                     mean_coverage=sum(coverages[start:end_exclusive]) / length,
+                    reference_accession=ref_id,
+                    reference_start=aln_to_seq_coord(ref_seq, aln_start - 1) + 1 if ref_seq else 0,
+                    reference_end=aln_to_seq_coord(ref_seq, aln_end) if ref_seq else 0,
                 )
             )
         start = None
@@ -305,14 +377,19 @@ def _pair_primer_candidates(
     return unique
 
 
-def generate_primer_pairs(alignment_text: str, params: PrimerDesignParams) -> list[PrimerPair]:
-    _validate_primer_design_params(params)
-    consensus, mask, _, _, _ = build_consensus_and_mask(
-        alignment_text, params.identity_threshold, params.coverage_threshold
-    )
+def _generate_primer_pairs_for_target(
+    target: str,
+    mask: list[bool],
+    params: PrimerDesignParams,
+    *,
+    reference_accession: str = "",
+) -> list[PrimerPair]:
+    if len(target) != len(mask):
+        raise ValueError("A sequência alvo e a máscara de conservação têm comprimentos diferentes.")
+
     forward: list[PrimerCandidate] = []
     reverse: list[PrimerCandidate] = []
-    n = len(consensus)
+    n = len(target)
 
     for start0 in range(n):
         for length in range(params.min_primer_len, params.max_primer_len + 1):
@@ -321,7 +398,7 @@ def generate_primer_pairs(alignment_text: str, params: PrimerDesignParams) -> li
                 break
             if not all(mask[start0:end0]):
                 continue
-            window = consensus[start0:end0]
+            window = target[start0:end0]
             f = _candidate(window, "F", start0 + 1, end0, params)
             r = _candidate(window, "R", start0 + 1, end0, params)
             if f:
@@ -329,7 +406,40 @@ def generate_primer_pairs(alignment_text: str, params: PrimerDesignParams) -> li
             if r:
                 reverse.append(r)
 
-    return _pair_primer_candidates(forward, reverse, params)
+    return _pair_primer_candidates(
+        forward,
+        reverse,
+        params,
+        reference_accession=reference_accession,
+    )
+
+
+def generate_primer_pairs(alignment_text: str, params: PrimerDesignParams) -> list[PrimerPair]:
+    _validate_primer_design_params(params)
+    consensus, mask, _, _, _ = build_consensus_and_mask(
+        alignment_text, params.identity_threshold, params.coverage_threshold
+    )
+    return _generate_primer_pairs_for_target(consensus, mask, params)
+
+
+def generate_primer_pairs_for_sequence(
+    sequence: str,
+    params: PrimerDesignParams,
+    reference_accession: str = "",
+) -> list[PrimerPair]:
+    """Gera primers diretamente sobre uma sequência, preservando suas coordenadas."""
+
+    _validate_primer_design_params(params)
+    target = "".join(sequence.split()).upper().replace("U", "T")
+    if not target:
+        raise ValueError("A sequência alvo para o desenho de primers está vazia.")
+    mask = [base in DNA for base in target]
+    return _generate_primer_pairs_for_target(
+        target,
+        mask,
+        params,
+        reference_accession=reference_accession.strip(),
+    )
 
 
 def _find_reference_alignment(
