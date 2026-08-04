@@ -49,3 +49,9 @@ Estas regras devem ser preservadas em todas as alterações futuras deste reposi
 - Não versionar `.venv`, caches, segredos ou configurações locais; respeitar o
   `.gitignore`.
 - O repositório remoto oficial é `https://github.com/eloahsuarez/pipeline_genes_api`.
+
+## Web Scraping e Integrações NCBI
+
+- **Primer-BLAST:** A integração com a página de resultados do NCBI utiliza *web scraping* leve (`requests` e `BeautifulSoup4`) e nunca navegadores *headless* como Playwright ou Selenium, visando não inflar o peso do programa nem seu consumo de RAM.
+- O Primer-BLAST utiliza um sistema de *polling* assíncrono via parâmetro `job_key`. A extração deve sempre manter o *loop* ativo até que a página retorne elementos conclusivos de sucesso (ex: `<div id="alignInfo">`, `<div class="pr_Result">`) ou erro explícito (`<p class="error">`), pois páginas intermediárias podem aparecer.
+- No uso do `BeautifulSoup`, preste atenção extra em *não* usar o `.decompose()` em tags estruturais como `<form>` ou `<table>`, visto que o NCBI posiciona suas tabelas de resultados cruciais (como as duplas pareadas) dentro de estruturas `<form>` ocultas.
