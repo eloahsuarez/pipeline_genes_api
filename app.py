@@ -625,42 +625,94 @@ class GenePipelineApp(tk.Tk):
         ttk.Label(frame, text="Organism").grid(row=5, column=0, sticky="e", padx=4, pady=4)
         self._entry(frame, 5, "", self._var("pb_organism", "Homo sapiens (taxid:9606)"), width=50, column=1)
 
-        ttk.Button(
-            frame, 
-            text="Analisar Especificidade (NCBI Primer-BLAST)", 
-            command=self.run_primer_blast
-        ).grid(row=6, column=0, columnspan=2, pady=20)
+        self.pb_status_var = tk.StringVar(value="")
+        ttk.Label(frame, textvariable=self.pb_status_var, foreground="blue").grid(row=6, column=1, sticky="w", pady=4)
+        
+        buttons = ttk.Frame(frame)
+        buttons.grid(row=7, column=0, columnspan=2, pady=10)
+        
+        ttk.Button(buttons, text="Consultar no App (Scraping)", command=self.run_primer_blast).pack(side="left", padx=5)
+        ttk.Button(buttons, text="Abrir no Navegador (Seguro)", command=self.run_primer_blast_browser).pack(side="left")
+        
+        from tkinter.scrolledtext import ScrolledText
+        self.pb_result_text = ScrolledText(frame, wrap="word", width=80, height=15, state="disabled")
+        self.pb_result_text.grid(row=8, column=0, columnspan=2, sticky="nsew", pady=10, padx=10)
+        frame.rowconfigure(8, weight=1)
+
 
     def run_primer_blast(self) -> None:
-        fwd = self.vars["pb_forward"].get().strip()
-        rev = self.vars["pb_reverse"].get().strip()
-        if not fwd or not rev:
-            messagebox.showwarning("Faltam Primers", "Preencha ou selecione os primers na aba IDT antes de analisar.")
+        import threading
+        
+        forward = self.vars["pb_forward"].get().strip()
+        reverse = self.vars["pb_reverse"].get().strip()
+        exon = self.vars["pb_span"].get()
+        database = self.vars["pb_database"].get()
+        organism = self.vars["pb_organism"].get().strip()
+
+        if not forward or not reverse:
+            from tkinter import messagebox
+            messagebox.showwarning(
+                "Aviso", "Preencha as sequências de Forward e Reverse."
+            )
+            return
+            
+        self.pb_status_var.set("Aguarde, enviando requisição para o NCBI...")
+        self.pb_result_text.configure(state="normal")
+        self.pb_result_text.delete("1.0", "end")
+        self.pb_result_text.configure(state="disabled")
+        self.update_idletasks()
+        
+        from ncbi_primer_blast import run_primer_blast_sync
+        
+        def update_status(msg):
+            self.pb_status_var.set(msg)
+            
+        def bg_task():
+            try:
+                result_text = run_primer_blast_sync(
+                    forward_primer=forward,
+                    reverse_primer=reverse,
+                    exon_junction_span=exon,
+                    database=database,
+                    organism=organism,
+                    status_callback=update_status
+                )
+                self.after(0, lambda: self._show_pb_results(result_text))
+            except Exception as e:
+                self.after(0, lambda: self._show_pb_results(f"Erro: {e}"))
+                
+        threading.Thread(target=bg_task, daemon=True).start()
+
+    def _show_pb_results(self, text: str) -> None:
+        self.pb_status_var.set("Pronto.")
+        self.pb_result_text.configure(state="normal")
+        self.pb_result_text.delete("1.0", "end")
+        self.pb_result_text.insert("1.0", text)
+        self.pb_result_text.configure(state="disabled")
+
+    def run_primer_blast_browser(self) -> None:
+        forward = self.vars["pb_forward"].get().strip()
+        reverse = self.vars["pb_reverse"].get().strip()
+        exon = self.vars["pb_span"].get()
+        database = self.vars["pb_database"].get()
+        organism = self.vars["pb_organism"].get().strip()
+
+        if not forward or not reverse:
+            from tkinter import messagebox
+            messagebox.showwarning(
+                "Aviso", "Preencha as sequências de Forward e Reverse."
+            )
             return
 
-        span_val = self.vars["pb_span"].get()
-        span_map = {
-            "No preference": "0", 
-            "Primer must span an exon-exon junction": "1", 
-            "Primer may not span an exon-exon junction": "2"
-        }
-
-        db_val = self.vars["pb_database"].get()
-        db_map = {
-            "Refseq mRNA": "refseq_mrna", 
-            "Refseq reference genomes": "refseq_representative_genomes", 
-            "Genomes for selected eukaryotic organisms (primary assembly only)": "PRIMERDB/genome_selected_species", 
-            "core_nt": "core_nt", 
-            "Refseq RNA (refseq_rna)": "refseq_rna", 
-            "nt": "nt"
-        }
-        
-        org = self.vars["pb_organism"].get().strip()
-        
         from ncbi_primer_blast import open_primer_blast
-        self.log(f"Enviando primers para NCBI Primer-BLAST (Database: {db_val}, Organism: {org})...")
-        open_primer_blast(fwd, rev, span_map.get(span_val, "0"), db_map.get(db_val, "refseq_mrna"), org)
 
+        open_primer_blast(
+            forward_primer=forward,
+            reverse_primer=reverse,
+            exon_junction_span=exon,
+            database=database,
+            organism=organism
+        )
     def _on_idt_selection_changed(self, _event=None) -> None:
         pair = self._selected_idt_pair()
         if pair:
