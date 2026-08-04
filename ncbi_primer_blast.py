@@ -105,7 +105,7 @@ def run_primer_blast_sync(
     }
     
     attempts = 0
-    while attempts < 20: # Limite de 100 segundos
+    while attempts < 30: # Limite de 150 segundos
         attempts += 1
         log(f"Aguardando NCBI processar ({attempts * 5}s)...")
         time.sleep(5)
@@ -115,11 +115,14 @@ def run_primer_blast_sync(
         except Exception as e:
             return f"Erro durante a verificação (polling): {e}"
             
-        if "Status" in poll_resp.text and "Submitted" in poll_resp.text:
+        if "alignInfo" in poll_resp.text or 'class="error"' in poll_resp.text or "pr_Result" in poll_resp.text:
+            log("Processamento concluído. Extraindo dados...")
+            return _parse_html_results(poll_resp.text)
+            
+        if "Status" in poll_resp.text or "job_key" in poll_resp.text:
             continue
             
-        log("Processamento concluído. Extraindo dados...")
-        return _parse_html_results(poll_resp.text)
+        return "Erro desconhecido: O NCBI retornou uma página inesperada."
         
     return "Timeout: A pesquisa demorou muito para responder."
 
@@ -130,18 +133,20 @@ def _parse_html_results(html: str) -> str:
     
     align_info = soup.find(id="alignInfo")
     if not align_info:
+        # Se não há alignInfo, tenta buscar div pr_Result inteira
+        align_info = soup.find("div", class_="pr_Result")
+        
+    if not align_info:
         # Se houve erro tipo "No primers found"
         err = soup.find("p", class_="error")
         if err:
             return f"Erro retornado pelo NCBI:\n{err.get_text().strip()}"
         return "Nenhum resultado de alinhamento encontrado (div 'alignInfo' ausente)."
         
-    # Tentar limpar tags script/style e links irrelevantes
-    for tag in align_info(["script", "style", "form", "a", "input", "button", "i"]):
+    # Limpar tags script/style e links, mas preservar table e form
+    for tag in align_info(["script", "style", "a", "button", "i"]):
         tag.decompose()
         
-    # Converter a div de forma legível
-    # O get_text extrai o texto, mas vamos tentar manter alguma quebra de linha
     lines = align_info.get_text(separator="\n").split("\n")
     cleaned_lines = []
     for line in lines:
