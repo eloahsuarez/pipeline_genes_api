@@ -1,6 +1,6 @@
 # Gene Conservado — NCBI + Clustal Omega + BLAST+/MFEprimer + IDT
 
-Versão atual: **1.10.2**
+Versão atual: **1.11.0**
 
 Aplicativo de desktop compatível com **macOS e Windows** que automatiza este fluxo:
 

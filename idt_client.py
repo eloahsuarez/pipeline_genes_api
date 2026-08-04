@@ -97,7 +97,14 @@ class IdtClient:
                 f"{OLIGO_BASE}/{endpoint}", json=payload, timeout=self.timeout
             )
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        try:
+            import json
+            with open("idt_debug.json", "a", encoding="utf-8") as f:
+                f.write(json.dumps({"endpoint": endpoint, "response": data}) + "\n")
+        except Exception:
+            pass
+        return data
 
     def _post_params(self, endpoint: str, params: dict[str, str]) -> Any:
         self._ensure_token()
@@ -111,7 +118,14 @@ class IdtClient:
                 f"{OLIGO_BASE}/{endpoint}", params=params, timeout=self.timeout
             )
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        try:
+            import json
+            with open("idt_debug.json", "a", encoding="utf-8") as f:
+                f.write(json.dumps({"endpoint": endpoint, "response": data}) + "\n")
+        except Exception:
+            pass
+        return data
 
     def analyze(self, sequence: str, conditions: IdtConditions) -> dict[str, Any]:
         payload = {

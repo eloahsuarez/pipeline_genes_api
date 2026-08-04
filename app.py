@@ -217,9 +217,9 @@ class GenePipelineApp(tk.Tk):
         self.notebook.add(self.tab_ncbi, text="1. NCBI")
         self.notebook.add(self.tab_sequences, text="2. Sequências")
         self.notebook.add(self.tab_clustal, text="3. Alinhamento")
-        self.notebook.add(self.tab_design, text="4. Conservação e primers")
+        self.notebook.add(self.tab_design, text="4. Primers")
         self.notebook.add(self.tab_results, text="5. Resultados")
-        self.notebook.add(self.tab_idt, text="6. IDT")
+        self.notebook.add(self.tab_idt, text="6. Análise de Primers (IDT)")
         self.notebook.add(self.tab_specificity, text="7. Especificidade")
 
         self._build_ncbi_tab()
@@ -394,9 +394,36 @@ class GenePipelineApp(tk.Tk):
         ttk.Button(frame, text="Alinhar sequências selecionadas", command=self.run_clustal).grid(row=8, column=0, columnspan=2, pady=10)
         self.clustal_info = tk.StringVar(value="Nenhum alinhamento executado.")
         ttk.Label(frame, textvariable=self.clustal_info, wraplength=900).grid(row=9, column=0, columnspan=2, sticky="w", padx=4, pady=8)
-        self.alignment_preview = ScrolledText(frame, height=18, wrap="none")
-        self.alignment_preview.grid(row=10, column=0, columnspan=2, sticky="nsew", padx=4, pady=4)
-        frame.rowconfigure(10, weight=1)
+        ttk.Button(frame, text="Encontrar regiões conservadas", command=self.analyze_conservation).grid(row=10, column=0, columnspan=2, pady=(10, 10))
+
+        self.alignment_preview = ScrolledText(frame, height=10, wrap="none")
+        self.alignment_preview.grid(row=11, column=0, columnspan=2, sticky="nsew", padx=4, pady=4)
+
+        region_frame = ttk.LabelFrame(frame, text="Regiões conservadas", padding=4)
+        region_frame.grid(row=12, column=0, columnspan=2, sticky="nsew", padx=4, pady=4)
+        self.region_results_tab = region_frame
+
+        rcols = ("accession", "start", "end", "length", "identity", "coverage", "sequence")
+        region_table = ttk.Frame(region_frame)
+        region_table.pack(fill="x", expand=False)
+        self.region_tree = ttk.Treeview(
+            region_table, columns=rcols, show="headings", height=4
+        )
+        for col, text, width in [
+            ("accession", "Acesso Alvo", 140), ("start", "Início", 80), ("end", "Fim", 80), ("length", "bp", 70),
+            ("identity", "Identidade", 90), ("coverage", "Cobertura", 90), ("sequence", "Sequência", 650),
+        ]:
+            self.region_tree.heading(col, text=text)
+            self.region_tree.column(col, width=width, anchor="w")
+        region_scroll_x = ttk.Scrollbar(
+            region_table, orient="horizontal", command=self.region_tree.xview
+        )
+        self.region_tree.configure(xscrollcommand=region_scroll_x.set)
+        self.region_tree.grid(row=0, column=0, sticky="nsew")
+        region_scroll_x.grid(row=1, column=0, sticky="ew")
+        region_table.columnconfigure(0, weight=1)
+
+        frame.rowconfigure(11, weight=1)
 
     def _build_design_tab(self) -> None:
         outer = self.tab_design
@@ -464,7 +491,6 @@ class GenePipelineApp(tk.Tk):
 
         actions = ttk.Frame(outer)
         actions.pack(fill="x", pady=8)
-        ttk.Button(actions, text="Encontrar regiões conservadas", command=self.analyze_conservation).pack(side="left", padx=4)
         ttk.Button(actions, text="Gerar pares de primers", command=self.generate_primers).pack(side="left", padx=4)
         ttk.Label(
             actions,
@@ -474,35 +500,12 @@ class GenePipelineApp(tk.Tk):
         result_outer = self.tab_results
         self.results_notebook = ttk.Notebook(result_outer)
         self.results_notebook.pack(fill="both", expand=True)
-        region_frame = ttk.Frame(self.results_notebook, padding=4)
         pair_frame = ttk.Frame(self.results_notebook, padding=4)
         map_frame = ttk.Frame(self.results_notebook, padding=4)
-        self.region_results_tab = region_frame
         self.pair_results_tab = pair_frame
         self.primer_map_tab = map_frame
-        self.results_notebook.add(region_frame, text="Regiões conservadas")
         self.results_notebook.add(pair_frame, text="Pares candidatos")
         self.results_notebook.add(map_frame, text="Mapa dos primers")
-
-        rcols = ("accession", "start", "end", "length", "identity", "coverage", "sequence")
-        region_table = ttk.Frame(region_frame)
-        region_table.pack(fill="x", expand=False)
-        self.region_tree = ttk.Treeview(
-            region_table, columns=rcols, show="headings", height=4
-        )
-        for col, text, width in [
-            ("accession", "Acesso Alvo", 140), ("start", "Início", 80), ("end", "Fim", 80), ("length", "bp", 70),
-            ("identity", "Identidade", 90), ("coverage", "Cobertura", 90), ("sequence", "Sequência", 650),
-        ]:
-            self.region_tree.heading(col, text=text)
-            self.region_tree.column(col, width=width, anchor="w")
-        region_scroll_x = ttk.Scrollbar(
-            region_table, orient="horizontal", command=self.region_tree.xview
-        )
-        self.region_tree.configure(xscrollcommand=region_scroll_x.set)
-        self.region_tree.grid(row=0, column=0, sticky="nsew")
-        region_scroll_x.grid(row=1, column=0, sticky="ew")
-        region_table.columnconfigure(0, weight=1)
 
         pcols = ("rank", "score", "amp", "junction", "fwd", "ftm", "fgc", "rev", "rtm", "rgc")
         pair_table = ttk.Frame(pair_frame)
@@ -635,8 +638,25 @@ class GenePipelineApp(tk.Tk):
         ttk.Button(buttons, text="Abrir no Navegador (Seguro)", command=self.run_primer_blast_browser).pack(side="left")
         
         from tkinter.scrolledtext import ScrolledText
-        self.pb_result_text = ScrolledText(frame, wrap="word", width=80, height=15, state="disabled")
+        self.pb_result_text = ScrolledText(frame, wrap="none", font="TkFixedFont", width=80, height=15, state="disabled")
         self.pb_result_text.grid(row=8, column=0, columnspan=2, sticky="nsew", pady=10, padx=10)
+        
+        ttk.Label(
+            frame,
+            text="Legenda de pareamento (complementarity):\n"
+                 "Verde (Excelente): Self comp ≤ 4 E Self 3' comp ≤ 2\n"
+                 "Amarelo (Aceitável): Self comp até 6 OU Self 3' comp até 3\n"
+                 "Vermelho (Não aceitar): Self comp > 6 OU Self 3' comp > 3",
+            font=("TkDefaultFont", 10, "italic")
+        ).grid(row=9, column=0, columnspan=2, sticky="w", padx=10, pady=(0, 10))
+        
+        ttk.Label(
+            frame,
+            text="LER O CAMPO ACIMA ATÉ O FINAL PARA AVALIAR SE OS PRIMERS PAREIAM ESPECIFICAMENTE APENAS COM OS TRANSCRITOS DO GENE DE INTERESSE DA SUA ESPÉCIE-ALVO - SOMENTE PRIMERS ESPECÍFICOS PODERÃO SER APROVADOS",
+            font=("TkDefaultFont", 10, "bold"),
+            wraplength=700
+        ).grid(row=10, column=0, columnspan=2, sticky="w", padx=10, pady=(0, 10))
+        
         frame.rowconfigure(8, weight=1)
 
 
@@ -645,9 +665,25 @@ class GenePipelineApp(tk.Tk):
         
         forward = self.vars["pb_forward"].get().strip()
         reverse = self.vars["pb_reverse"].get().strip()
-        exon = self.vars["pb_span"].get()
-        database = self.vars["pb_database"].get()
+        exon_raw = self.vars["pb_span"].get()
+        database_raw = self.vars["pb_database"].get()
         organism = self.vars["pb_organism"].get().strip()
+        
+        exon_map = {
+            "No preference": "0",
+            "Primer must span an exon-exon junction": "1",
+            "Primer may not span an exon-exon junction": "2"
+        }
+        db_map = {
+            "Refseq mRNA": "refseq_mrna",
+            "Refseq reference genomes": "refseq_representative_genomes",
+            "Genomes for selected eukaryotic organisms (primary assembly only)": "PRIMERDB/genome_selected_species",
+            "core_nt": "core_nt",
+            "Refseq RNA (refseq_rna)": "refseq_rna",
+            "nt": "nt"
+        }
+        exon = exon_map.get(exon_raw, "0")
+        database = db_map.get(database_raw, "refseq_mrna")
 
         if not forward or not reverse:
             from tkinter import messagebox
@@ -688,14 +724,67 @@ class GenePipelineApp(tk.Tk):
         self.pb_result_text.configure(state="normal")
         self.pb_result_text.delete("1.0", "end")
         self.pb_result_text.insert("1.0", text)
+        
+        self.pb_result_text.tag_configure("pb_green", background="#d4edda")
+        self.pb_result_text.tag_configure("pb_yellow", background="#fff3cd")
+        self.pb_result_text.tag_configure("pb_red", background="#f8d7da")
+        
+        lines = text.split("\n")
+        for i, line in enumerate(lines):
+            row_idx = i + 1
+            if ("Forward primer" in line or "Reverse primer" in line) and "|" in line:
+                parts = line.split("|")
+                if len(parts) >= 7:
+                    try:
+                        self_comp = float(parts[5].strip())
+                        self_3p_comp = float(parts[6].strip())
+                        
+                        sc_color = "pb_green"
+                        if self_comp > 6.0:
+                            sc_color = "pb_red"
+                        elif self_comp > 4.0:
+                            sc_color = "pb_yellow"
+                            
+                        s3_color = "pb_green"
+                        if self_3p_comp > 3.0:
+                            s3_color = "pb_red"
+                        elif self_3p_comp > 2.0:
+                            s3_color = "pb_yellow"
+                            
+                        worst_color = "pb_green"
+                        if sc_color == "pb_red" or s3_color == "pb_red":
+                            worst_color = "pb_red"
+                        elif sc_color == "pb_yellow" or s3_color == "pb_yellow":
+                            worst_color = "pb_yellow"
+                            
+                        self.pb_result_text.tag_add(worst_color, f"{row_idx}.0", f"{row_idx}.end")
+                    except ValueError:
+                        pass
+        
         self.pb_result_text.configure(state="disabled")
 
     def run_primer_blast_browser(self) -> None:
         forward = self.vars["pb_forward"].get().strip()
         reverse = self.vars["pb_reverse"].get().strip()
-        exon = self.vars["pb_span"].get()
-        database = self.vars["pb_database"].get()
+        exon_raw = self.vars["pb_span"].get()
+        database_raw = self.vars["pb_database"].get()
         organism = self.vars["pb_organism"].get().strip()
+        
+        exon_map = {
+            "No preference": "0",
+            "Primer must span an exon-exon junction": "1",
+            "Primer may not span an exon-exon junction": "2"
+        }
+        db_map = {
+            "Refseq mRNA": "refseq_mrna",
+            "Refseq reference genomes": "refseq_representative_genomes",
+            "Genomes for selected eukaryotic organisms (primary assembly only)": "PRIMERDB/genome_selected_species",
+            "core_nt": "core_nt",
+            "Refseq RNA (refseq_rna)": "refseq_rna",
+            "nt": "nt"
+        }
+        exon = exon_map.get(exon_raw, "0")
+        database = db_map.get(database_raw, "refseq_mrna")
 
         if not forward or not reverse:
             from tkinter import messagebox
@@ -739,7 +828,7 @@ class GenePipelineApp(tk.Tk):
         actions = ttk.Frame(frame)
         actions.grid(row=6, column=0, columnspan=4, pady=10)
         ttk.Button(actions, text="Testar autenticação", command=self.test_idt).pack(side="left", padx=4)
-        ttk.Button(actions, text="Analisar melhores pares na IDT", command=self.run_idt).pack(side="left", padx=4)
+        ttk.Button(actions, text="Analisar +10 sets de primers", command=self.run_idt).pack(side="left", padx=4)
         ttk.Button(actions, text="Analisar par específico...", command=self.run_idt_specific).pack(side="left", padx=4)
         ttk.Button(actions, text="Analisar par externo", command=self.run_idt_external).pack(side="left", padx=4)
         ttk.Label(frame, text="A senha não é gravada no arquivo de configuração. Não cole credenciais nesta conversa.", wraplength=900).grid(row=7, column=0, columnspan=4, sticky="w", padx=4, pady=4)
@@ -753,6 +842,11 @@ class GenePipelineApp(tk.Tk):
         ]:
             self.idt_tree.heading(col, text=text)
             self.idt_tree.column(col, width=width, anchor="center")
+        self.idt_tree.tag_configure("good", background="#d4edda")
+        self.idt_tree.tag_configure("yellow", background="#fff3cd")
+        self.idt_tree.tag_configure("light_orange", background="#ffe5b4")
+        self.idt_tree.tag_configure("dark_orange", background="#ffb347")
+        self.idt_tree.tag_configure("red", background="#f8d7da")
         self.idt_tree.grid(row=8, column=0, columnspan=4, sticky="nsew", padx=4, pady=8)
         idt_result_actions = ttk.Frame(frame)
         idt_result_actions.grid(row=9, column=0, columnspan=4, sticky="w", padx=4, pady=(0, 4))
@@ -767,6 +861,11 @@ class GenePipelineApp(tk.Tk):
         ).pack(side="left", padx=8)
         self.idt_tree.bind("<Double-1>", lambda _event: self.show_selected_idt_pair())
         self.idt_tree.bind("<<TreeviewSelect>>", self._on_idt_selection_changed)
+        ttk.Label(
+            frame,
+            text="Legenda: Verde (> -5.0) Ideal | Amarelo (> -6.0) Aceitável | Laranja claro (> -7.0) Atenção | Laranja escuro (≤ -7.0) Risco",
+            font=("TkDefaultFont", 10, "italic")
+        ).grid(row=10, column=0, columnspan=4, sticky="w", padx=4, pady=4)
         frame.rowconfigure(8, weight=1)
 
     def log(self, message: str) -> None:
@@ -1116,7 +1215,6 @@ class GenePipelineApp(tk.Tk):
                 )
             self.alignment_preview.delete("1.0", "end")
             self.alignment_preview.insert("1.0", self.alignment[:100000])
-            self.notebook.select(self.tab_design)
 
         label = (
             "Alinhando duas sequências localmente…"
@@ -1155,11 +1253,15 @@ class GenePipelineApp(tk.Tk):
                 region.reference_accession, region.reference_start, region.reference_end, region.length,
                 f"{region.mean_identity * 100:.1f}%", f"{region.mean_coverage * 100:.1f}%", region.sequence,
             ))
-        self.results_notebook.select(self.region_results_tab)
-        self.notebook.select(self.tab_results)
+        self.notebook.select(self.tab_clustal)
         self.log(f"Foram encontradas {len(self.regions)} regiões conservadas.")
 
     def generate_primers(self) -> None:
+        if hasattr(self, "pairs") and self.pairs:
+            current = self.vars["top_pairs"].get()
+            if len(self.pairs) >= current:
+                self.vars["top_pairs"].set(current + 50)
+                
         try:
             source_mode, source_payload, single_record = primer_design_source(
                 self.alignment, self.records
@@ -1670,13 +1772,37 @@ class GenePipelineApp(tk.Tk):
                 continue
             f = pair.idt.get("forward", {})
             r = pair.idt.get("reverse", {})
+            
+            f_hp = self._value(f, "strongest_hairpin", "deltaG")
+            r_hp = self._value(r, "strongest_hairpin", "deltaG")
+            f_sd = self._value(f, "strongest_self_dimer", "DeltaG")
+            r_sd = self._value(r, "strongest_self_dimer", "DeltaG")
+            hetero = self._value(pair.idt, "strongest_hetero_dimer", "DeltaG")
+            
+            vals = (f_hp, r_hp, f_sd, r_sd, hetero)
+            min_val = float('inf')
+            for v in vals:
+                try:
+                    num = float(v)
+                    if num < min_val:
+                        min_val = num
+                except (TypeError, ValueError):
+                    pass
+                    
+            if min_val > -5.0:
+                tags = ("good",)
+            elif min_val > -6.0:
+                tags = ("yellow",)
+            elif min_val > -7.0:
+                tags = ("light_orange",)
+            else:
+                tags = ("dark_orange",)
+                
             self.idt_tree.insert("", "end", iid=str(pair.rank), values=(
                 pair.rank,
                 self._value(f, "analysis", "MeltTemp"), self._value(r, "analysis", "MeltTemp"),
-                self._value(f, "strongest_hairpin", "deltaG"), self._value(r, "strongest_hairpin", "deltaG"),
-                self._value(f, "strongest_self_dimer", "DeltaG"), self._value(r, "strongest_self_dimer", "DeltaG"),
-                self._value(pair.idt, "strongest_hetero_dimer", "DeltaG"),
-            ))
+                f_hp, r_hp, f_sd, r_sd, hetero
+            ), tags=tags)
 
     def _selected_idt_pair(self) -> PrimerPair | None:
         selected = self.idt_tree.selection()
